@@ -5,8 +5,9 @@ import os
 from aind_analysis_results.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
 from aind_analysis_results.analysis_dispatch_model import AnalysisDispatchModel
 import analysis_wrapper.utils as utils
-from analysis_wrapper.example_analysis_model import (ExampleAnalysisSpecification,
-                                             ExampleAnalysisSpecificationCLI)
+from analysis_wrapper.example_analysis_model import (
+    ExampleAnalysisSpecification, ExampleAnalysisSpecificationCLI, ExampleAnalysisOutputs
+)
 
 ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
@@ -30,6 +31,10 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     # with open('/results/acquisition_keys.json', 'w') as f:
     #     json.dump(acquisition_keys, f)
         
+    processing.output_parameters = ExampleAnalysisOutputs(
+        isi_violations=["example_violation_1", "example_violation_2"],
+        additional_info="This is an example of additional information about the analysis."
+    )
     write_results_and_metadata(processing, ANALYSIS_BUCKET)
     logger.info(f"Successfully wrote record to docdb and s3")
 
