@@ -17,7 +17,7 @@
 			"packages": [
 				{
 					"name": "git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git#egg=aind-analysis-results",
-					"version": "86da1928b49df43d513793c59faa5b1de745a3c7"
+					"version": "9a03b4632ecb9c4fcb9b4f654e7d567b4d17e6ba"
 				},
 				{
 					"name": "pydantic-settings",
@@ -51,7 +51,7 @@
 		},
 		{
 			"name": "CODEOCEAN_EMAIL",
-			"value": "tom.chartrand@alleninstitute.org"
+			"value": "YOUR_EMAIL_HERE@alleninstitute.org"
 		},
 		{
 			"name": "ANALYSIS_BUCKET",
