@@ -1,6 +1,5 @@
 {
 	"version": 1,
-<<<<<<< feat-analysis-wrapper
 	"base_image": "codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04",
 	"args": [
 		"AWS_ACCESS_KEY_ID",
@@ -17,7 +16,8 @@
 		"pip": {
 			"packages": [
 				{
-					"name": "git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git#egg=aind-analysis-results"
+					"name": "git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git#egg=aind-analysis-results",
+					"version": "86da1928b49df43d513793c59faa5b1de745a3c7"
 				},
 				{
 					"name": "pydantic-settings",
@@ -58,10 +58,4 @@
 			"value": "aind-scratch-data/analysis/architecture_example_v2"
 		}
 	]
-=======
-	"base_image": "codeocean/jupyterlab:3.0.9-miniconda4.9.2-python3.8-ubuntu20.04",
-	"options": {
-		"git_ask_pass": true
-	}
->>>>>>> main
 }
