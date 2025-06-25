@@ -1,0 +1,14 @@
+{
+    "s3_location": [
+        "s3://codeocean-s3datasetsbucket-1u41qdg42ur9/50fa9416-4e21-482f-8901-889322a87ae3"
+    ],
+    "asset_id": [
+        "50fa9416-4e21-482f-8901-889322a87ae3"
+    ],
+    "asset_name": [
+        "behavior_774659_2025-06-07_14-31-15_processed_2025-06-08_03-49-49"
+    ],
+    "file_location": [
+        "s3://codeocean-s3datasetsbucket-1u41qdg42ur9/50fa9416-4e21-482f-8901-889322a87ae3/nwb/behavior_774659_2025-06-07_14-31-15.nwb"
+    ]
+}

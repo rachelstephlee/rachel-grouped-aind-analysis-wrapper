@@ -1,0 +1,12 @@
+environment_version: 1
+credentials:
+- type: general
+  id: 01IOr2PnQmjXXOpX
+  description: CODEOCEAN_API_TOKEN
+  value: CODEOCEAN_API_TOKEN
+- type: aws
+  id: UpVOb5Sz7xpLXlDx
+  description: AWS Assumable Role - aind-codeocean-user
+  access_key_id: AWS_ACCESS_KEY_ID
+  secret_access_key: AWS_SECRET_ACCESS_KEY
+  region: AWS_DEFAULT_REGION

@@ -1,7 +1,67 @@
 {
 	"version": 1,
+<<<<<<< feat-analysis-wrapper
+	"base_image": "codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04",
+	"args": [
+		"AWS_ACCESS_KEY_ID",
+		"AWS_DEFAULT_REGION",
+		"AWS_SECRET_ACCESS_KEY",
+		"CODEOCEAN_API_TOKEN"
+	],
+	"post_install": true,
+	"options": {
+		"registry_host_arg": true,
+		"git_ask_pass": true
+	},
+	"installers": {
+		"pip": {
+			"packages": [
+				{
+					"name": "git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git#egg=aind-analysis-results"
+				},
+				{
+					"name": "pydantic-settings",
+					"version": "2.9.1"
+				},
+				{
+					"name": "s3fs",
+					"version": "0.4.2"
+				}
+			],
+			"options": {},
+			"pre_install_options": {}
+		}
+	},
+	"env_variables": [
+		{
+			"name": "DOCDB_HOST",
+			"value": "api.allenneuraldynamics.org"
+		},
+		{
+			"name": "DOCDB_DATABASE",
+			"value": "analysis"
+		},
+		{
+			"name": "DOCDB_COLLECTION",
+			"value": "architecture_example_v2"
+		},
+		{
+			"name": "CODEOCEAN_DOMAIN",
+			"value": "codeocean.allenneuraldynamics.org"
+		},
+		{
+			"name": "CODEOCEAN_EMAIL",
+			"value": "tom.chartrand@alleninstitute.org"
+		},
+		{
+			"name": "ANALYSIS_BUCKET",
+			"value": "aind-scratch-data/analysis/architecture_example_v2"
+		}
+	]
+=======
 	"base_image": "codeocean/jupyterlab:3.0.9-miniconda4.9.2-python3.8-ubuntu20.04",
 	"options": {
 		"git_ask_pass": true
 	}
+>>>>>>> main
 }
