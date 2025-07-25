@@ -9,7 +9,7 @@ from pydantic import create_model
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aind_data_schema.base import GenericModel
-from aind_analysis_results.analysis_dispatch_model import AnalysisDispatchModel
+from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
 
 
 logging.basicConfig(

@@ -16,8 +16,8 @@
 		"pip": {
 			"packages": [
 				{
-					"name": "git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git#egg=aind-analysis-results",
-					"version": "ee8b95b18da98e96d2778b223cb05e41b9b65554"
+					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils#egg=analysis-pipeline-utils",
+					"version": "69a508033c0ef7e643408c93e373698d3afacdd0"
 				},
 				{
 					"name": "pydantic-settings",
