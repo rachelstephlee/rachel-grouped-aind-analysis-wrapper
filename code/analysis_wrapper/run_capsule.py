@@ -30,10 +30,10 @@ def run_analysis(
     # for location in analysis_dispatch_inputs.file_location:
     #     with NWBZarrIO(location, 'r') as io:
     #         nwbfile = io.read()
+    #     run_your_analysis(nwbfile, **parameters)
+    # OR
+    #     subprocess.run(["--param_1": parameters["param_1"]])
 
-    # acquisition_keys = list(nwbfile.acquisition.keys())
-    # with open('/results/acquisition_keys.json', 'w') as f:
-    #     json.dump(acquisition_keys, f)
 
     processing.output_parameters = ExampleAnalysisOutputs(
         isi_violations=["example_violation_1", "example_violation_2"],
