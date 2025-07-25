@@ -3,11 +3,8 @@ import logging
 import os
 from pathlib import Path
 
-from aind_analysis_results.analysis_dispatch_model import AnalysisDispatchModel
-from aind_analysis_results.metadata import (construct_processing_record,
-                                            docdb_record_exists,
-                                            write_results_and_metadata)
-
+from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
+from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
 import analysis_wrapper.utils as utils
 from analysis_wrapper.example_analysis_model import ExampleAnalysisSpecification, ExampleAnalysisOutputs
 
