@@ -1,4 +1,4 @@
-# hash:sha256:d90ef0e553ccbd5659755d4affc7c8128e5282b48e6a22c58d3ba4f01c80c1ef
+# hash:sha256:93d39651936d371335dbc89c6e270430ed9123a4c71fcf7f709d67e0d737bb8d
 ARG REGISTRY_HOST
 FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
@@ -22,7 +22,7 @@ ENV ANALYSIS_BUCKET=aind-scratch-data/analysis/architecture_example_v2
 RUN pip install -U --no-cache-dir \
     pydantic-settings==2.9.1 \
     s3fs==0.4.2 \
-    -e git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git@9a03b4632ecb9c4fcb9b4f654e7d567b4d17e6ba#egg=aind-analysis-results
+    -e git+https://github.com/AllenNeuralDynamics/aind-analysis-results.git@ee8b95b18da98e96d2778b223cb05e41b9b65554#egg=aind-analysis-results
 
 COPY postInstall /
 RUN /postInstall
