@@ -6,7 +6,6 @@ from pydantic import Field
 from typing import List, Optional, Union
 
 from aind_data_schema.base import GenericModel
-import analysis_wrapper.utils as utils
 
 class ExampleAnalysisSpecification(GenericModel):
     """

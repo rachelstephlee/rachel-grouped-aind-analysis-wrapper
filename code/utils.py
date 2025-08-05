@@ -3,14 +3,13 @@ import json
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, ClassVar, List, Optional, Union, Type, TypeVar
-
-from pydantic import create_model
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Any, ClassVar, Optional, Type, TypeVar, Union
 
 from aind_data_schema.base import GenericModel
-from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
-
+from analysis_pipeline_utils.analysis_dispatch_model import \
+    AnalysisDispatchModel
+from pydantic import Field, create_model
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -45,12 +44,21 @@ def make_cli_model(model_cls: Type[T]) -> Type[BaseSettings]:
     )
 
     class CLIModel(BaseSettings, optional_model):  # type: ignore
+        dry_run: int = Field(
+            default=1,
+            description="Run without posting results if set to 1.",
+            exclude=True,  # this prevents it from being merged
+        )
+        input_directory: Path = Field(
+            default=Path("/data"), description="Input directory", exclude=True
+        )
         model_config: ClassVar[SettingsConfigDict] = {
             "cli_parse_args": True,
         }
 
     CLIModel.__name__ = f"{model_cls.__name__}CLI"
     return CLIModel
+
 
 def _get_merged_analysis_parameters(
     fixed_parameters: dict[str, Any],
@@ -110,6 +118,7 @@ def _get_merged_analysis_parameters(
 
 def get_analysis_model_parameters(
     analysis_dispatch_inputs: AnalysisDispatchModel,
+    cli_model: BaseSettings,
     analysis_model: GenericModel,
     analysis_parameters_json_path: Union[Path, None] = None,
 ) -> dict[str, Any]:
@@ -121,16 +130,19 @@ def get_analysis_model_parameters(
     analysis_dispatch_inputs: AnalysisDispatchModel
         The input model with data information for analysis to be run on
 
+    cli_model: BaseSettings
+        The analysis model with cli user defined parameters
+
     analysis_model: GenericModel
         The analysis model with user defined parameters
-        
+
     analysis_parameters_json_path: Union[Path, None] = None
         The path to analysis_parameters.json file
 
     Returns
     -------
     dict[str, Any]
-        The merged analysis parameters 
+        The merged analysis parameters
     """
     fixed_parameters = {}
     if analysis_parameters_json_path.exists():
@@ -153,8 +165,7 @@ def get_analysis_model_parameters(
     else:
         fixed_parameters_model = {}
 
-    cli_model = make_cli_model(analysis_model)
-    cli_parameters_model = cli_model().model_dump()
+    cli_parameters_model = cli_model.model_dump()
     logger.info(f"Command line parameters {cli_parameters_model}")
     if analysis_dispatch_inputs.distributed_parameters:
         distributed_parameters = (

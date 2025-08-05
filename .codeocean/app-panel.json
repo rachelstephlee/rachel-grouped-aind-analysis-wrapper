@@ -1,0 +1,15 @@
+{
+	"version": 1,
+	"named_parameters": true,
+	"parameters": [
+		{
+			"id": "AlQz69srPlluL3zz",
+			"name": "dry run",
+			"param_name": "dry_run",
+			"description": "Dry run of analysis. Does not post results to S3 and docdb if True. Default set to 1 (dry run True)",
+			"type": "text",
+			"value_type": "integer",
+			"default_value": "1"
+		}
+	]
+}
