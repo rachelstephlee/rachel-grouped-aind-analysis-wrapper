@@ -7,10 +7,11 @@ from analysis_pipeline_utils.analysis_dispatch_model import \
 from analysis_pipeline_utils.metadata import (construct_processing_record,
                                               docdb_record_exists,
                                               write_results_and_metadata)
+from analysis_pipeline_utils.utils_analysis_wrapper import (
+    get_analysis_model_parameters, make_cli_model)
 
-import utils
-from example_analysis_model import (
-    ExampleAnalysisOutputs, ExampleAnalysisSpecification)
+from example_analysis_model import (ExampleAnalysisOutputs,
+                                    ExampleAnalysisSpecification)
 
 ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ def run_analysis(
 
     # Execute analysis and write to results folder
     # using the passed parameters
-    # SEE EXAMPLE BELOW
+    # Example:
     # Use NWBZarrIO to reads
     # for location in analysis_dispatch_inputs.file_location:
     #     with NWBZarrIO(location, 'r') as io:
@@ -71,14 +72,12 @@ def run_analysis(
         logger.info("Dry run complete. Results not posted")
 
 
-# Most of the below code will not need to change per-analysis
-# and will be moved to a shared library
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-    cli_cls = utils.make_cli_model(ExampleAnalysisSpecification)
+    cli_cls = make_cli_model(ExampleAnalysisSpecification)
     cli_model = cli_cls()
     logger.info(f"Command line args {cli_model.model_dump()}")
     input_model_paths = tuple(cli_model.input_directory.glob("job_dict/*"))
@@ -91,7 +90,7 @@ if __name__ == "__main__":
             analysis_dispatch_inputs = AnalysisDispatchModel.model_validate(
                 json.load(f)
             )
-        merged_parameters = utils.get_analysis_model_parameters(
+        merged_parameters = get_analysis_model_parameters(
             analysis_dispatch_inputs,
             cli_model,
             ExampleAnalysisSpecification,
