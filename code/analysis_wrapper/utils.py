@@ -11,6 +11,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from aind_data_schema.base import GenericModel
 from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
 
+import s3fs 
+import os
+
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -173,3 +176,17 @@ def get_analysis_model_parameters(
     )
 
     return merged_parameters
+
+def get_metadata(analysis_dispatch_inputs: AnalysisDispatchModel): 
+    """
+    retrieves metadata from analysis_dispatch_inputs s3 location and returns a list of 
+    metadata as a dictionary
+    """  
+    fs= s3fs.S3FileSystem()
+    metadata_list: list[dict] = []
+    for s3_location in analysis_dispatch_inputs.s3_location:
+        with fs.open(f"{s3_location}/metadata.nd.json") as f:
+            metadata = json.load(f)
+        metadata_list.append(metadata)
+    
+    return metadata_list
