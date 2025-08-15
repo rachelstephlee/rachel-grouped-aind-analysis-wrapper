@@ -2,6 +2,12 @@ import json
 import logging
 import os
 from pathlib import Path
+from hdmf_zarr import NWBZarrIO
+from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
+
+import analysis_util
+
+
 
 import sys
 script_dir = "/root/capsule/code/analysis_wrapper"
@@ -36,13 +42,16 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     # using the passed parameters
     # SEE EXAMPLE BELOW
     # Use NWBZarrIO to reads
-    for location in analysis_dispatch_inputs.file_location:
-        with NWBZarrIO(location, 'r') as io:
-            nwbfile = io.read()
+    # for location in analysis_dispatch_inputs.file_location:
+    #     with NWBZarrIO(location, 'r') as io:
+    #         nwbfile = io.read()
     #     run_your_analysis(nwbfile, **parameters)
     # OR
     #     subprocess.run(["--param_1": parameters["param_1"]])
-    # (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
+    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
+    # will need to enrich each of these dataframes
+    nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials, df_events, df_fip)
+
 
 
 
