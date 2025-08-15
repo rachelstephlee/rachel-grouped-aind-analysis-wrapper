@@ -14,9 +14,9 @@ if script_dir in sys.path:
     sys.path.remove(script_dir)
 # sys.path.insert(0,"/root/capsule/")
 
-# sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# import analysis_util
+import analysis_util
 
 from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
 from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
