@@ -5,7 +5,6 @@ from pathlib import Path
 from hdmf_zarr import NWBZarrIO
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 
-import analysis_util
 
 
 
@@ -14,6 +13,8 @@ script_dir = "/root/capsule/code/analysis_wrapper"
 if script_dir in sys.path:
     sys.path.remove(script_dir)
 # sys.path.insert(0,"/root/capsule/")
+
+from analysis import util as analysis_util
 
 
 from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
