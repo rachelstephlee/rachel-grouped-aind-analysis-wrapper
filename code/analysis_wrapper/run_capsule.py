@@ -14,9 +14,9 @@ if script_dir in sys.path:
     sys.path.remove(script_dir)
 # sys.path.insert(0,"/root/capsule/")
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import analysis_util
+# import analysis_util
 
 from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
 from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
@@ -52,7 +52,7 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     #     subprocess.run(["--param_1": parameters["param_1"]])
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
     # will need to enrich each of these dataframes
-    nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials, df_events, df_fip)
+    # nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials, df_events, df_fip)
 
 
 
