@@ -45,7 +45,7 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     # SEE EXAMPLE BELOW
     # Use NWBZarrIO to reads
     for location in analysis_dispatch_inputs.file_location:
-        io = NWBZarrIO(filename, mode="r")
+        io = NWBZarrIO(location, mode="r")
         nwb = io.read()
     #     run_your_analysis(nwbfile, **parameters)
     # OR
