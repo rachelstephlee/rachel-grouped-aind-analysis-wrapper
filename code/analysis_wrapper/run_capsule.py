@@ -45,14 +45,13 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     # SEE EXAMPLE BELOW
     # Use NWBZarrIO to reads
     for location in analysis_dispatch_inputs.file_location:
-        io = NWBZarrIO(location, mode="r")
-        nwb = io.read()
+        (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
     #     run_your_analysis(nwbfile, **parameters)
     # OR
     #     subprocess.run(["--param_1": parameters["param_1"]])
-    # (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
+    # 
     # will need to enrich each of these dataframes
-    # nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials, df_events, df_fip)
+    nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials, df_events, df_fip)
 
 
 
