@@ -3,6 +3,8 @@ import logging
 import os
 from pathlib import Path
 from hdmf_zarr import NWBZarrIO
+
+import warnings
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
 
@@ -32,10 +34,11 @@ ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
 
 
-        
+# def get_nwb_processed()
 
 def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
     processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
+    print(analysis_dispatch_inputs.file_location)
     if docdb_record_exists(processing):
         logger.info("Record already exists, skipping.")
         return
@@ -46,14 +49,15 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     # SEE EXAMPLE BELOW
     # Use NWBZarrIO to reads
     for location in analysis_dispatch_inputs.file_location:
-        (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = [parameters["channels"]])
-        df_sess = nwb_utils.create_df_session(location)
+
     #     run_your_analysis(nwbfile, **parameters)
     # OR
     #     subprocess.run(["--param_1": parameters["param_1"]])
     # 
     # will need to enrich each of these dataframes
-        df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = 'QLearning_L2F1_CKfull_softmax')
+        (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=location, interested_channels = [parameters["channels"]])
+        df_sess = nwb_utils.create_df_session(location)
+        df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
         df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
         if len(df_fip):
             [df_fip_all, df_trials_fip_enriched] = enrich_dfs.enrich_fip_in_df_trials(df_fip, df_trials_enriched)
@@ -62,10 +66,7 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
         else:
             warnings.warn(f"channels {parameters["channels"]} not found in df_fip.")
             df_fip_final = df_fip
-            df_trials_final = df_trials
-
-
-       
+            df_trials_final = df_trials       
         nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials_final, df_events, df_fip_final)
 
 
