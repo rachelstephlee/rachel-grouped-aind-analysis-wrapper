@@ -55,10 +55,17 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     # will need to enrich each of these dataframes
         df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = 'QLearning_L2F1_CKfull_softmax')
         df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
+        if len(df_fip):
+            [df_fip_all, df_trials_fip_enriched] = enrich_dfs.enrich_fip_in_df_trials(df_fip, df_trials_enriched)
 
-        [df_fip_all, df_trials_fip_enriched] = enrich_dfs.enrich_fip_in_df_trials(df_fip, df_trials_enriched)
+            (df_fip_final, df_trials_final, df_trials_fip) = enrich_dfs.remove_tonic_df_fip(df_fip_all, df_trials_enriched, df_trials_fip_enriched)
+        else:
+            warnings.warn(f"channels {parameters["channels"]} not found in df_fip.")
+            df_fip_final = df_fip
+            df_trials_final = df_trials
 
-        (df_fip_final, df_trials_final, df_trials_fip) = enrich_dfs.remove_tonic_df_fip(df_fip_all, df_trials_enriched, df_trials_fip_enriched)
+
+       
         nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials_final, df_events, df_fip_final)
 
 
