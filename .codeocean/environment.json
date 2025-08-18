@@ -31,7 +31,7 @@
 					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@main#egg=aind-dynamic-foraging-basic-analysis"
 				},
 				{
-					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@main#egg=aind-dynamic-foraging-data-utils"
+					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@e98970ad1c1fcb2e235fef53a0cbf7361a360236#egg=aind-dynamic-foraging-data-utils"
 				},
 				{
 					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@8722a08fc651ee0d4773927d91a5378ec8449980#egg=analysis-pipeline-utils"

@@ -1,4 +1,4 @@
-# hash:sha256:02ba9e75fe8fe75aa556c25ce9bc48fa818eb9aa98aa5cad1ff9eb9509a94fd0
+# hash:sha256:8fd01c5901919cfcd71488a147e14c285f4667347b3d3b547212b6a70fc5033f
 ARG REGISTRY_HOST
 FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
@@ -41,7 +41,7 @@ RUN pip install -U --no-cache-dir \
     xarray==2025.7.1 \
     zarr==2.18.6 \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@main#egg=aind-dynamic-foraging-basic-analysis \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@main#egg=aind-dynamic-foraging-data-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@e98970ad1c1fcb2e235fef53a0cbf7361a360236#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@8722a08fc651ee0d4773927d91a5378ec8449980#egg=analysis-pipeline-utils
 
 COPY postInstall /
