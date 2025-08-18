@@ -17,6 +17,8 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
 
     channels: str = Field(..., description="channels to plot from")
 
+    fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
+
 # only saving plots, no outputs needed 
 # class SummaryResultsAnalysisOutputs(GenericModel):
 #     """

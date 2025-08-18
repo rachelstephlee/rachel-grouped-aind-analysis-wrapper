@@ -10,6 +10,17 @@
 			"help_text": "channels to plot from\n\n(G/R/Iso)_(0/1/2/3/4)_(preprocessed/preprocessed-bright/dff-bright/dff-mc-iso-IRLS)",
 			"type": "text",
 			"value_type": "string"
+		},
+		{
+			"id": "lgr4slUI1SYuR4mv",
+			"name": "fitted model for RPE",
+			"param_name": "fitted_model",
+			"description": "Fitted model for RPE. ",
+			"help_text": "Fitted model for RPE. See this link for all: \n\nhttps://foraging-behavior-browser.allenneuraldynamics-test.org/RL_model_playground",
+			"type": "text",
+			"value_type": "string",
+			"default_value": "\"QLearning_L2F1_CKfull_softmax\"",
+			"required": true
 		}
 	]
 }
