@@ -50,7 +50,7 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     #     run_your_analysis(nwbfile, **parameters)
     # OR
     #     subprocess.run(["--param_1": parameters["param_1"]])
-    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
+    # (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = parameters["channels"])
     # will need to enrich each of these dataframes
     # nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials, df_events, df_fip)
 

@@ -78,7 +78,7 @@
 				},
 				{
 					"name": "s3fs",
-					"version": "0.4.2"
+					"version": "2025.2.0"
 				},
 				{
 					"name": "scikit-learn",

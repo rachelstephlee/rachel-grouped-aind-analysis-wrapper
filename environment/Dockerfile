@@ -1,4 +1,4 @@
-# hash:sha256:78a6a5b998c5270f2cbbc609be1df5f6bafdcf05b2da53b725df5b4cf81dc55a
+# hash:sha256:02ba9e75fe8fe75aa556c25ce9bc48fa818eb9aa98aa5cad1ff9eb9509a94fd0
 ARG REGISTRY_HOST
 FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
@@ -33,7 +33,7 @@ RUN pip install -U --no-cache-dir \
     pydantic-settings==2.9.1 \
     pypdf2==3.0.1 \
     rupture==1.4.5 \
-    s3fs==0.4.2 \
+    s3fs==2025.2.0 \
     scikit-learn==1.7.1 \
     scipy==1.16.0 \
     seaborn==0.13.2 \
