@@ -1,8 +1,8 @@
-# aind-analysis-wrapper
+# rachel-grouped-aind-analysis-wrapper
 
-⚠️ **IMPORTANT: This is a Template Repository** ⚠️
 
-This repository serves as an **example template** for building your own analysis workflows. **You should duplicate this repository and customize it for your specific analysis needs.** Do not modify this template directly - instead, create your own copy and build your analysis on top of the provided framework.
+Forked from the template repository  [AllenNeuralDynamics/aind-analysis-wrapper]([url](https://github.com/AllenNeuralDynamics/aind-analysis-wrapper)). Includes all code for doing grouped (per mouse) analysis for the dynamic foraging task with fiber photometry data. 
+
 
 The **analysis wrapper** is a standardized framework for running large-scale data analysis workflows on cloud infrastructure. It processes job input models from the [job dispatcher](https://github.com/AllenNeuralDynamics/aind-analysis-job-dispatch), executes your custom analysis code, and automatically handles metadata tracking and result storage.
 
