@@ -1,16 +1,11 @@
 {
 	"version": 1,
 	"base_image": "codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04",
-	"args": [
-		"AWS_ACCESS_KEY_ID",
-		"AWS_DEFAULT_REGION",
-		"AWS_SECRET_ACCESS_KEY",
-		"CODEOCEAN_API_TOKEN"
-	],
 	"post_install": true,
 	"options": {
 		"registry_host_arg": true,
-		"git_ask_pass": true
+		"git_ask_pass": true,
+		"mount_secrets": true
 	},
 	"installers": {
 		"pip": {
@@ -28,10 +23,10 @@
 					"version": "1.37.3"
 				},
 				{
-					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@main#egg=aind-dynamic-foraging-basic-analysis"
+					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.26#egg=aind-dynamic-foraging-basic-analysis"
 				},
 				{
-					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@e98970ad1c1fcb2e235fef53a0cbf7361a360236#egg=aind-dynamic-foraging-data-utils"
+					"name": "git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@error_checks#egg=aind-dynamic-foraging-data-utils"
 				},
 				{
 					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@8722a08fc651ee0d4773927d91a5378ec8449980#egg=analysis-pipeline-utils"

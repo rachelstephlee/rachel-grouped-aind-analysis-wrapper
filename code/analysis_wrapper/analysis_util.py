@@ -1,5 +1,6 @@
 import warnings
 import glob
+import pandas as pd
 
 
 class dummy_nwb:
@@ -86,6 +87,38 @@ def get_dummy_nwbs_by_subject(df_trials, df_events, df_fip):
             warnings.warn(f"Skipping {subject_id}: not found in all input DataFrames.", UserWarning)
 
     return dummy_nwbs_list
+
+def get_date_and_week_interval(df, start_date):
+    date_series = pd.to_datetime(df['ses_idx'].str.split('_').str[1], format='%Y-%m-%d')
+    week_interval_series = ((date_series - start_date).dt.days // 7) + 1
+    return week_interval_series
+
+def get_dummy_nwbs_by_week(df_sess,df_trials, df_events, df_fip):
+    start_date = pd.to_datetime(df_sess['session_date'].min())
+
+    df_sess['week_interval'] = get_date_and_week_interval(df_sess, start_date)
+    df_trials['week_interval'] = get_date_and_week_interval(df_trials, start_date)
+    df_events['week_interval'] = get_date_and_week_interval(df_events, start_date)
+    df_fip['week_interval'] = get_date_and_week_interval(df_fip, start_date)
+
+    week_interval_list = df_trials.week_interval.unique()
+    dummy_nwbs_list = []
+    for week_interval in week_interval_list:
+        # Check if ses_idx exists in all 3 dataframes
+        if (
+            week_interval in df_events['week_interval'].values and
+            week_interval in df_fip['week_interval'].values and
+            week_interval in df_trials['week_interval'].values
+        ):
+            df_trials_i = df_trials[df_trials['week_interval'] == week_interval]
+            df_events_i = df_events[df_events['week_interval'] == week_interval]
+            df_fip_i = df_fip[df_fip['week_interval'] == week_interval]
+
+            dummy_nwbs_list.append(get_dummy_nwbs(df_trials_i, df_events_i, df_fip_i))
+        else:
+            warnings.warn(f"Skipping {week_interval}: not found in all input DataFrames.", UserWarning)
+
+    return df_sess, dummy_nwbs_list
 
 
 

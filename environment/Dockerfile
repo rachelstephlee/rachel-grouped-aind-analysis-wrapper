@@ -1,15 +1,9 @@
-# hash:sha256:8fd01c5901919cfcd71488a147e14c285f4667347b3d3b547212b6a70fc5033f
+# hash:sha256:42f0e062e2df8c3300839ddf218f16d11c48dc29f97c23cd191a794304a92c51
 ARG REGISTRY_HOST
 FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_DEFAULT_REGION
-ARG AWS_SECRET_ACCESS_KEY
-ARG CODEOCEAN_API_TOKEN
-
 ARG GIT_ASKPASS
-ARG GIT_ACCESS_TOKEN
 COPY git-askpass /
 
 ENV DOCDB_HOST=api.allenneuraldynamics.org
@@ -19,7 +13,9 @@ ENV CODEOCEAN_DOMAIN=codeocean.allenneuraldynamics.org
 ENV CODEOCEAN_EMAIL=rachel.lee@alleninstitute.org
 ENV ANALYSIS_BUCKET=aind-analysis-prod-o5171v/dynamic-foraging-nm
 
-RUN pip install -U --no-cache-dir \
+RUN --mount=type=secret,id=git-access-token \
+    GIT_ACCESS_TOKEN="$(cat /run/secrets/git-access-token)" \
+    pip install -U --no-cache-dir \
     aind-analysis-arch-result-access==0.7.1 \
     awscli==1.38.3 \
     boto3==1.37.3 \
@@ -40,9 +36,10 @@ RUN pip install -U --no-cache-dir \
     statsmodels==0.14.5 \
     xarray==2025.7.1 \
     zarr==2.18.6 \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@main#egg=aind-dynamic-foraging-basic-analysis \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@e98970ad1c1fcb2e235fef53a0cbf7361a360236#egg=aind-dynamic-foraging-data-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.26#egg=aind-dynamic-foraging-basic-analysis \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@error_checks#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@8722a08fc651ee0d4773927d91a5378ec8449980#egg=analysis-pipeline-utils
 
 COPY postInstall /
-RUN /postInstall
+RUN --mount=type=secret,id=secrets . /run/secrets/secrets \
+    && /postInstall

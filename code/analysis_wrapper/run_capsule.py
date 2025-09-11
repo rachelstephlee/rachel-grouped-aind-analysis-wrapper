@@ -8,7 +8,8 @@ import warnings
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
 
-
+# TEMP UNTIL SESSION_STAGE IS FIXED
+from aind_analysis_arch_result_access.han_pipeline import get_session_table
 
 
 import sys
@@ -34,29 +35,10 @@ ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
 
 
-# def get_nwb_processed()
+def get_nwb_processed(file_locations, **parameters) -> None:
+    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=file_locations, interested_channels = [parameters["channels"]])
 
-def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
-    processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
-    
-    if docdb_record_exists(processing):
-        logger.info("Record already exists, skipping.")
-        return
-
-    # all_metadata = utils.get_metadata(analysis_dispatch_inputs)
-    # Execute analysis and write to results folder
-    # using the passed parameters
-    # SEE EXAMPLE BELOW
-    # Use NWBZarrIO to reads
-    # for location in analysis_dispatch_inputs.file_location:
-
-    #     run_your_analysis(nwbfile, **parameters)
-    # OR
-    #     subprocess.run(["--param_1": parameters["param_1"]])
-    # 
-    # will need to enrich each of these dataframes
-    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=analysis_dispatch_inputs.file_location, interested_channels = [parameters["channels"]])
-    df_sess = nwb_utils.create_df_session(analysis_dispatch_inputs.file_location)
+    df_sess = nwb_utils.create_df_session(file_locations)
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):
@@ -65,20 +47,27 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     else:
         warnings.warn(f"channels {parameters["channels"]} not found in df_fip.")
         df_fip_final = df_fip
-        df_trials_final = df_trials       
-    nwbs_subject = analysis_util.get_dummy_nwbs_by_subject(df_trials_final, df_events, df_fip_final)
+        df_trials_final = df_trials 
+    
+    # return all dataframes
+    return (df_sess, df_trials_final, df_events, df_fip_final) 
+      
 
+def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
+    processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
+    
+    # DRY RUN 
+    # if docdb_record_exists(processing):
+    #     logger.info("Record already exists, skipping.")
+    #     return
+    (df_sess, df_trials_final, df_events, df_fip_final) = get_nwb_processed(analysis_dispatch_inputs, **parameters)
 
+    (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials_final, df_events, df_fip_final) 
 
-
-            
-    # acquisition_keys = list(nwbfile.acquisition.keys())
-    # with open('/results/acquisition_keys.json', 'w') as f:
-    #     json.dump(acquisition_keys, f)
         
-
-    write_results_and_metadata(processing, ANALYSIS_BUCKET)
-    logger.info(f"Successfully wrote record to docdb and s3")
+    # DRY RUN
+    # write_results_and_metadata(processing, ANALYSIS_BUCKET)
+    # logger.info(f"Successfully wrote record to docdb and s3")
 
 
 # Most of the below code will not need to change per-analysis
@@ -116,4 +105,19 @@ if __name__ == "__main__":
             analysis_dispatch_inputs = AnalysisDispatchModel.model_validate(json.load(f))
         
         analysis_specification = SummaryPlotsAnalysisSpecification.model_validate(analysis_specs).model_dump()
-        run_analysis(analysis_dispatch_inputs, **analysis_specification)
+
+        # TEMP UNTIL SESSION_STAGE IS FIXED
+        df = get_session_table(if_load_bpod=False)
+        subject_id = analysis_dispatch_inputs.file_location[0].split('behavior_')[1].split('_')[0]
+        df_trained = df[(df['subject_id'] == subject_id) & (df['current_stage_actual'].isin(['STAGE_FINAL','GRADUATED']))]
+        session_names = [
+            f"{row['subject_id']}_{row['session_date'].strftime('%Y-%m-%d')}"
+            for _, row in df_trained.iterrows()
+        ]
+        filtered_file_locations = [
+            f for f in analysis_dispatch_inputs.file_location
+            if any(session_name in f for session_name in session_names)
+        ]
+
+
+        run_analysis(filtered_file_locations, **analysis_specification)
