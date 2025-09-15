@@ -6,8 +6,8 @@
 			"id": "QpPxwWYIvZHd1q8x",
 			"name": "channels",
 			"param_name": "channels",
-			"description": "channels to plot from",
-			"help_text": "channels to plot from\n\n(G/R/Iso)_(0/1/2/3/4)_(preprocessed/preprocessed-bright/dff-bright/dff-mc-iso-IRLS)",
+			"description": "channel DICTIONARY to plot from ",
+			"help_text": "channel dictionary to plot from \n\nKey = channel name, Value = intended location and measurement \n\n(G/R/Iso)_(0/1/2/3/4)_(preprocessed/preprocessed-bright/dff-bright/dff-mc-iso-IRLS)",
 			"type": "text",
 			"value_type": "string"
 		},
