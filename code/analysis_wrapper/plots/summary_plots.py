@@ -10,7 +10,7 @@ from scipy import stats
 
 
 
-N_COLS_PER_ROW = 5
+N_COLS_PER_ROW = 4
 
 def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 
@@ -160,9 +160,10 @@ def plot_row_panels(nwbs, channel, avg_signal_col_name_func, panels):
         )
     panels[3].set_ylabel('z-scored df/f \n (baseline removed)')
 
-    # 5. Add the RPE vs avg signal 
-    avg_signal_col = f"data_z_norm_{channel[:3]}_choice_time"
-    plot_RPE_by_avg_signal(df_trials_all, avg_signal_col, ax = panels[4])
+    # # 5. Add the RPE vs avg signal 
+    # avg_signal_col = f"data_z_norm_{channel[:3]}_choice_time"
+    # plot_RPE_by_avg_signal(df_trials_all, avg_signal_col, ax = panels[4])
+    
     for ax in panels:
         ax.set_title("")
         ax.set_xlabel("")
@@ -274,7 +275,7 @@ def plot_clean_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels(nwbs, channel, panels)
+        panels = plot_row_panels(nwbs, channel, "", panels)
         axes_rows[row] = panels
 
 
