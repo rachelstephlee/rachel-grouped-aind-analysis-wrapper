@@ -14,7 +14,7 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
     Represents the specification for an analysis, including its name,
     version, libraries to track, and parameters.
     """
-    name: str=Field(description:"name of analysis")
+    name: str=Field(description="name of analysis")
     channels: dict[str, str] = Field(..., description="Dictionary of channels to plot from. Keys = channel name, Value = intended location and measurement")
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
 
