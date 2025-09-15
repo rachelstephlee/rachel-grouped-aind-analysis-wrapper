@@ -103,9 +103,9 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     summary_plots.plot_clean_final_N_sess(df_sess, nwbs_by_week, analysis_specification["channels"], final_N_sess = 5, loc = plot_loc)
 
         
-    # DRY RUN
-    # write_results_and_metadata(processing, ANALYSIS_BUCKET)
-    # logger.info(f"Successfully wrote record to docdb and s3")
+    # DRY RUN (comment in or out)
+    write_results_and_metadata(processing, ANALYSIS_BUCKET)
+    logger.info(f"Successfully wrote record to docdb and s3")
 
 
 # Most of the below code will not need to change per-analysis
