@@ -8,8 +8,6 @@ import warnings
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
 
-# TEMP UNTIL SESSION_STAGE IS FIXED
-from aind_analysis_arch_result_access.han_pipeline import get_session_table
 
 
 import sys
@@ -30,13 +28,20 @@ from analysis_wrapper.analysis_model import (
 )
 import subprocess
 
+# for analysis code
+import numpy as np
+import pandas as pd 
+from analysis_wrapper.plots import summary_plots
+
+
 DATA_PATH: Path = Path("/data")  # TODO: don't hardcode
 ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
 
 
 def get_nwb_processed(file_locations, **parameters) -> None:
-    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=file_locations, interested_channels = [parameters["channels"]])
+    interested_channels = parameters["channels"].keys()
+    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=file_locations, interested_channels = interested_channels)
 
     df_sess = nwb_utils.create_df_session(file_locations)
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
@@ -45,7 +50,7 @@ def get_nwb_processed(file_locations, **parameters) -> None:
         [df_fip_all, df_trials_fip_enriched] = enrich_dfs.enrich_fip_in_df_trials(df_fip, df_trials_enriched)
         (df_fip_final, df_trials_final, df_trials_fip) = enrich_dfs.remove_tonic_df_fip(df_fip_all, df_trials_enriched, df_trials_fip_enriched)
     else:
-        warnings.warn(f"channels {parameters["channels"]} not found in df_fip.")
+        warnings.warn(f"channels {interested_channels} not found in df_fip.")
         df_fip_final = df_fip
         df_trials_final = df_trials 
     
@@ -56,13 +61,46 @@ def get_nwb_processed(file_locations, **parameters) -> None:
 def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
     processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
     
-    # DRY RUN 
-    # if docdb_record_exists(processing):
-    #     logger.info("Record already exists, skipping.")
-    #     return
-    (df_sess, df_trials_final, df_events, df_fip_final) = get_nwb_processed(analysis_dispatch_inputs, **parameters)
 
-    (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials_final, df_events, df_fip_final) 
+    if docdb_record_exists(processing):
+        logger.info("Record already exists, skipping.")
+        return
+
+    
+    (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
+
+    # prepare computations for plotting 
+
+    df_trials['reward_all'] = df_trials['earned_reward'] + df_trials['extra_reward']
+    # Compute num_reward_past and num_no_reward_past
+    df_trials['reward_shifted'] = df_trials.groupby('ses_idx')['reward_all'].shift(1)  # Shift to look at past values
+
+    df_trials['num_reward_past'] = df_trials.groupby(
+                            (df_trials['reward_shifted'] != df_trials['reward_all']).cumsum()).cumcount() + 1
+
+    # Set 'NA' for mismatched reward types
+    df_trials.loc[df_trials['reward_all'] == 0, 'num_reward_past'] = df_trials.loc[df_trials['reward_all'] == 0, 'num_reward_past']* -1 
+
+    # Drop the temporary column
+    df_trials.drop(columns=['reward_shifted'], inplace=True)
+
+
+    RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,1.1,1/3)]
+
+    df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_all'],# all versus earned not a huge difference
+                        np.arange(-1,1.5,1/3), labels=[str(np.round(i,2)) for i in np.arange(-1,1.01,1/3)])
+
+    (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
+
+
+    # plot summary plots
+    plot_loc = '/results/plots/'
+
+    if not os.path.exists(plot_loc):
+        os.makedirs(plot_loc)
+
+
+    summary_plots.plot_clean_final_N_sess(df_sess, nwbs_by_week, analysis_specification["channels"], final_N_sess = 5, loc = plot_loc)
 
         
     # DRY RUN
@@ -106,18 +144,5 @@ if __name__ == "__main__":
         
         analysis_specification = SummaryPlotsAnalysisSpecification.model_validate(analysis_specs).model_dump()
 
-        # TEMP UNTIL SESSION_STAGE IS FIXED
-        df = get_session_table(if_load_bpod=False)
-        subject_id = analysis_dispatch_inputs.file_location[0].split('behavior_')[1].split('_')[0]
-        df_trained = df[(df['subject_id'] == subject_id) & (df['current_stage_actual'].isin(['STAGE_FINAL','GRADUATED']))]
-        session_names = [
-            f"{row['subject_id']}_{row['session_date'].strftime('%Y-%m-%d')}"
-            for _, row in df_trained.iterrows()
-        ]
-        filtered_file_locations = [
-            f for f in analysis_dispatch_inputs.file_location
-            if any(session_name in f for session_name in session_names)
-        ]
 
-
-        run_analysis(filtered_file_locations, **analysis_specification)
+        run_analysis(analysis_dispatch_inputs, **analysis_specification)

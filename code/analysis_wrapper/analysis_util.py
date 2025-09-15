@@ -1,6 +1,7 @@
 import warnings
 import glob
 import pandas as pd
+import numpy as np
 
 
 class dummy_nwb:
@@ -48,7 +49,9 @@ class dummy_nwb:
 def get_dummy_nwbs(df_trials, df_events, df_fip):
     ses_idx_list = df_trials.ses_idx.unique()
     dummy_nwbs_list = []
-    for ses_idx in ses_idx_list:
+    ses_dates_order = np.argsort(pd.to_datetime([ses_idx.split('_')[1] for ses_idx in ses_idx_list]))
+
+    for ses_idx in ses_idx_list[ses_dates_order]:
         # Check if ses_idx exists in all 3 dataframes
         if (
             ses_idx in df_events['ses_idx'].values and

@@ -36,6 +36,7 @@ RUN --mount=type=secret,id=git-access-token \
     statsmodels==0.14.5 \
     xarray==2025.7.1 \
     zarr==2.18.6 \
+    aind_dynamic_foraging_models \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.26#egg=aind-dynamic-foraging-basic-analysis \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@error_checks#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@8722a08fc651ee0d4773927d91a5378ec8449980#egg=analysis-pipeline-utils
