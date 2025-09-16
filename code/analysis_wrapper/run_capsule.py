@@ -41,9 +41,10 @@ logger = logging.getLogger(__name__)
 
 def get_nwb_processed(file_locations, **parameters) -> None:
     interested_channels = parameters["channels"].keys()
+    df_sess = nwb_utils.create_df_session(file_locations)
+
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=file_locations, interested_channels = interested_channels)
 
-    df_sess = nwb_utils.create_df_session(file_locations)
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):
