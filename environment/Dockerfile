@@ -36,9 +36,9 @@ RUN --mount=type=secret,id=git-access-token \
     statsmodels==0.14.5 \
     xarray==2025.7.1 \
     zarr==2.18.6 \
-    aind_dynamic_foraging_models \
+    aind_hierarchical_bootstrap.bootstrap \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.26#egg=aind-dynamic-foraging-basic-analysis \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@error_checks#egg=aind-dynamic-foraging-data-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@main#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@ae433685788495d8cc63032d2a8fb67cb354190f#egg=analysis-pipeline-utils
 
 COPY postInstall /
