@@ -42,8 +42,22 @@ logger = logging.getLogger(__name__)
 def get_nwb_processed(file_locations, **parameters) -> None:
     interested_channels = parameters["channels"].keys()
     df_sess = nwb_utils.create_df_session(file_locations)
+    df_sess['s3_location'] = file_locations
 
-    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=file_locations, interested_channels = interested_channels)
+    # check for multiple sessions on the same day
+    dup_mask = df_sess.duplicated(subset=['ses_idx'], keep=False)
+    if dup_mask.any():
+        warnings.warn(f"Duplicate sessions found for ses_idx: {df_sess[dup_mask]['ses_idx'].tolist()}."
+                        "Keeping the one with more finished trials.")
+        df_sess = (df_sess.sort_values(by=['ses_idx','finished_trials'], ascending=False)
+                         .drop_duplicates(subset=['ses_idx'], keep='first')
+                         .sort_values(by=['ses_idx']) 
+                         .reset_index(drop=True)
+                  )
+        
+
+    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values,
+                                                                interested_channels = interested_channels)
 
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
@@ -62,10 +76,10 @@ def get_nwb_processed(file_locations, **parameters) -> None:
 def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
     processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
     
-
-    if docdb_record_exists(processing):
-        logger.info("Record already exists, skipping.")
-        return
+# # DRY RUN
+#     if docdb_record_exists(processing):
+#         logger.info("Record already exists, skipping.")
+#         return
 
     
     (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
@@ -105,8 +119,8 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
 
         
     # DRY RUN (comment in or out)
-    write_results_and_metadata(processing, ANALYSIS_BUCKET)
-    logger.info(f"Successfully wrote record to docdb and s3")
+    # write_results_and_metadata(processing, ANALYSIS_BUCKET)
+    # logger.info(f"Successfully wrote record to docdb and s3")
 
 
 # Most of the below code will not need to change per-analysis
