@@ -40,7 +40,7 @@ class dummy_nwb:
         
 
     def __str__(self):
-        return f"dummy nwb for session {self.session_id}"
+        return f"session {self.session_id}"
 
     def __repr__(self):
         return f"{self.session_id}"
