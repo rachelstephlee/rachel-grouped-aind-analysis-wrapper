@@ -265,7 +265,7 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
         last_panels[2].set_xlabel('num_reward_past')
         last_panels[0].set_xlabel('Time (s) from choice')
         last_panels[1].set_xlabel('Time (s) from choice')
-        last_panels[-1].set_xlabel('Time (s) from choice')
+        last_panels[3].set_xlabel('Time (s) from choice')
 
     # show legends on the first data row (row index 1) if it exists
     if nrows > 1 and axes_rows[1] is not None:
