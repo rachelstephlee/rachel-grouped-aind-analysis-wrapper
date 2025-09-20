@@ -79,10 +79,10 @@ def get_nwb_processed(file_locations, **parameters) -> None:
 def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
     processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
     
-# # DRY RUN
-#     if docdb_record_exists(processing):
-#         logger.info("Record already exists, skipping.")
-#         return
+# DRY RUN
+    if docdb_record_exists(processing):
+        logger.info("Record already exists, skipping.")
+        return
 
     
     (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
@@ -166,9 +166,9 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
         
-    # # DRY RUN (comment in or out)
-    # write_results_and_metadata(processing, ANALYSIS_BUCKET)
-    # logger.info(f"Successfully wrote record to docdb and s3")
+    # DRY RUN (comment in or out)
+    write_results_and_metadata(processing, ANALYSIS_BUCKET)
+    logger.info(f"Successfully wrote record to docdb and s3")
 
 
 # Most of the below code will not need to change per-analysis
