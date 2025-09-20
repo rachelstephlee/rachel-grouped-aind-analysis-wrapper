@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_nwb_processed(file_locations, **parameters) -> None:
-    interested_channels = parameters["channels"].keys()
+    interested_channels = list(parameters["channels"].keys())
     df_sess = nwb_utils.create_df_session(file_locations)
     df_sess['s3_location'] = file_locations
 
@@ -59,8 +59,7 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     if "weekly" or "all_sess" not in parameters["plot_types"]:
         df_sess = df_sess.tail(parameters["last_N_sess"])
     
-    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values,
-                                                                interested_channels = interested_channels)
+    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
@@ -79,10 +78,10 @@ def get_nwb_processed(file_locations, **parameters) -> None:
 def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
     processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
     
-# DRY RUN
-    if docdb_record_exists(processing):
-        logger.info("Record already exists, skipping.")
-        return
+# # DRY RUN
+#     if docdb_record_exists(processing):
+#         logger.info("Record already exists, skipping.")
+#         return
 
     
     (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
@@ -166,9 +165,9 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
         
-    # DRY RUN (comment in or out)
-    write_results_and_metadata(processing, ANALYSIS_BUCKET)
-    logger.info(f"Successfully wrote record to docdb and s3")
+    # # DRY RUN (comment in or out)
+    # write_results_and_metadata(processing, ANALYSIS_BUCKET)
+    # logger.info(f"Successfully wrote record to docdb and s3")
 
 
 # Most of the below code will not need to change per-analysis
