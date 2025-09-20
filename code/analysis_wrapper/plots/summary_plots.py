@@ -331,7 +331,7 @@ def plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}all_sess{subject_id}_{channel}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
+        plt.savefig(f"{loc}all_sess_{subject_id}_{channel}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
         plt.close()
 
 def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5, loc = None):
