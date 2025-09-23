@@ -52,11 +52,13 @@ def get_nwb_processed(file_locations, **parameters) -> None:
                         "Keeping the one with more finished trials.")
         df_sess = (df_sess.sort_values(by=['ses_idx','finished_trials'], ascending=False)
                          .drop_duplicates(subset=['ses_idx'], keep='first')
-                         .sort_values(by=['ses_idx']) 
-                         .reset_index(drop=True)
                   )
-    # only read last N sessions unless weekly plots are requested
-    if "weekly" or "all_sess" not in parameters["plot_types"]:
+    # sort sessions
+    df_sess = (df_sess.sort_values(by=['session_date']) 
+                         .reset_index(drop=True)
+              )
+    # only read last N sessions unless daily, weekly plots are requested
+    if "weekly" and "all_sess" not in parameters["plot_types"]:
         df_sess = df_sess.tail(parameters["last_N_sess"])
     
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
