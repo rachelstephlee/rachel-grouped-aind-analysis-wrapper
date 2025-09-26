@@ -128,7 +128,6 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
                             data_column=data_column,
                             output_col = avg_signal_col
                         )
-        df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week for nwb in nwb_week])
         
         # get rpe slope per session 
 
