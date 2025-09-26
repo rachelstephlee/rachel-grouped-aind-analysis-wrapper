@@ -63,6 +63,9 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
+    if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
+        df_fip = df_fip.rename(columns={'timestamps':'timestamps_WRONG', 'raw_timestamps': 'timestamps'})
+        
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):
@@ -139,7 +142,6 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
                             data_column=data_column,
                             output_col = avg_signal_col
                         )
-        df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week for nwb in nwb_week])
         
         # get rpe slope per session 
 
@@ -160,7 +162,8 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
             rpe_slope.append([ses_date, slope_pos, slope_neg])
         rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
         rpe_slope_dict[channel] = rpe_slope
-
+    subject_id = df_sess['subject_id'].unique()[0]
+    rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
 
 
     # plot summary plots
