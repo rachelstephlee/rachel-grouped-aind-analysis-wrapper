@@ -149,7 +149,8 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
             rpe_slope.append([ses_date, slope_pos, slope_neg])
         rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
         rpe_slope_dict[channel] = rpe_slope
-    rpe_slope.to_csv("/results/rpe_slope.csv")
+    subject_id = df_sess['subject_id'].unique()[0]
+    rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
 
 
     # plot summary plots
