@@ -63,6 +63,9 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
+    if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
+        df_fip = df_fip.rename(columns={'timestamps':'timestamps_WRONG', 'raw_timestamps': 'timestamps'})
+        
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):
