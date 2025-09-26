@@ -151,8 +151,13 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
             rpe_slope.append([ses_date, slope_pos, slope_neg])
         rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
         rpe_slope_dict[channel] = rpe_slope
+   
     subject_id = df_sess['subject_id'].unique()[0]
-    rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
+    # Concatenate with keys, turning dict keys into an index
+    combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
+    combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
+
+    combined_rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
 
 
     # plot summary plots
