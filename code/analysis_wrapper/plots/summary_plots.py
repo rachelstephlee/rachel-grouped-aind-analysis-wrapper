@@ -232,8 +232,14 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
         marker = '+',
         ax = top_panels[1]
     )
+
+
     top_panels[0].set_ylabel('Slope of positive RPE regression')
     top_panels[1].set_ylabel('Slope of negative RPE regression')
+    
+    top_panels[0].set_title(f'Positive RPE regression slope. Average slope = {rpe_slope['slope (RPE >= 0)'].mean():.4f}')
+    top_panels[1].set_title(f'Negative RPE regression slope. Average slope = {rpe_slope['slope (RPE < 0)'].mean():.4f}')
+
 
     [panel.set_xlabel('Date') for panel in top_panels]
     [panel.tick_params(axis='x', labelrotation=-45) for panel in top_panels]
@@ -281,7 +287,6 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
 def plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc=None):
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
-
     mpl.rcParams["axes.spines.right"] = False
     mpl.rcParams["axes.spines.top"] = False
 
