@@ -9,7 +9,6 @@ from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
 from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
 
-from aind_analysis_arch_result_access.han_pipeline import get_session_table
 
 import sys
 script_dir = "/root/capsule/code/analysis_wrapper"
@@ -60,14 +59,13 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     # only read last N sessions unless daily, weekly plots are requested
     if "weekly" and "all_sess" not in parameters["plot_types"] and parameters["plot_types"] != "":
         df_sess = df_sess.tail(parameters["last_N_sess"])
-    
+
+
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
     if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
         df_fip = df_fip.rename(columns={'timestamps':'timestamps_WRONG', 'raw_timestamps': 'timestamps'})
-        # print("pipeline_v14 has the WRONG timestamp column timing for df_fip"
-        #     " set to the first df_fip timestamp = 0 rather than first goCue = 0", file=sys.stderr)
-        
+       
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):
@@ -89,18 +87,6 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     if docdb_record_exists(processing):
         logger.info("Record already exists, skipping.")
         return
-
-    df = get_session_table(if_load_bpod=False)
-    subject_id = analysis_dispatch_inputs.file_location[0].split('behavior_')[1].split('_')[0]
-    df_trained = df[(df['subject_id'] == subject_id) & (df['current_stage_actual'].isin(['STAGE_FINAL','GRADUATED']))]
-    session_names = [
-        f"{row['subject_id']}_{row['session_date'].strftime('%Y-%m-%d')}"
-        for _, row in df_trained.iterrows()
-    ]
-    filtered_file_locations = [
-        f for f in analysis_dispatch_inputs.file_location
-        if any(session_name in f for session_name in session_names)
-    ]
 
     (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
 
