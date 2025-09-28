@@ -9,6 +9,7 @@ from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
 from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
 from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
 
+from aind_analysis_arch_result_access.han_pipeline import get_session_table
 
 import sys
 script_dir = "/root/capsule/code/analysis_wrapper"
@@ -99,6 +100,17 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
         logger.info("Record already exists, skipping.")
         return
 
+    df = get_session_table(if_load_bpod=False)
+    subject_id = analysis_dispatch_inputs.file_location[0].split('behavior_')[1].split('_')[0]
+    df_trained = df[(df['subject_id'] == subject_id) & (df['current_stage_actual'].isin(['STAGE_FINAL','GRADUATED']))]
+    session_names = [
+        f"{row['subject_id']}_{row['session_date'].strftime('%Y-%m-%d')}"
+        for _, row in df_trained.iterrows()
+    ]
+    filtered_file_locations = [
+        f for f in analysis_dispatch_inputs.file_location
+        if any(session_name in f for session_name in session_names)
+    ]
     (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
 
     # prepare computations for plotting 
