@@ -19,10 +19,16 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 
     x = data['RPE_all'].values
     y = data[avg_signal_col].values
-    lr = stats.linregress(x, y)
-    x_fit = np.linspace(x.min(), x.max(), 100)
-    y_fit = lr.intercept + lr.slope * x_fit
-    slope = lr.slope
+    try:
+        lr = stats.linregress(x, y)
+        x_fit = np.linspace(x.min(), x.max(), 100)
+        y_fit = lr.intercept + lr.slope * x_fit
+        slope = lr.slope
+    except Exception as e:
+        print(f"Error in linear regression: {e}")
+        x_fit = np.linspace(x.min(), x.max(), 100)
+        y_fit = np.nan * x_fit
+        slope = np.nan
     return (x_fit, y_fit, slope)
 
 def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
