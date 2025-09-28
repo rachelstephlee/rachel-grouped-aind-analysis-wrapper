@@ -65,6 +65,8 @@ def get_nwb_processed(file_locations, **parameters) -> None:
 
     if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
         df_fip = df_fip.rename(columns={'timestamps':'timestamps_WRONG', 'raw_timestamps': 'timestamps'})
+        # print("pipeline_v14 has the WRONG timestamp column timing for df_fip"
+        #     " set to the first df_fip timestamp = 0 rather than first goCue = 0", file=sys.stderr)
         
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
