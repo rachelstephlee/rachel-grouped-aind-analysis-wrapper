@@ -24,7 +24,7 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
         x_fit = np.linspace(x.min(), x.max(), 100)
         y_fit = lr.intercept + lr.slope * x_fit
         slope = lr.slope
-    except Exception as e:
+    except ValueError as e:
         print(f"Error in linear regression: {e}")
         x_fit = np.linspace(x.min(), x.max(), 100)
         y_fit = np.nan * x_fit

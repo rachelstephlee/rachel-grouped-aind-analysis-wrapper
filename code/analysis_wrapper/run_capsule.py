@@ -156,8 +156,14 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
             data_pos = data[data['RPE_all'] >= 0]
 
             ses_date = pd.to_datetime(ses_idx.split('_')[1])
-            (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
-            (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
+            try:
+                (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
+            except ValueError as e:
+                slope_pos = np.nan
+            try:
+                (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
+            except ValueError as e:
+                slope_neg = np.nan
             rpe_slope.append([ses_date, slope_pos, slope_neg])
         rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
         rpe_slope_dict[channel] = rpe_slope
