@@ -60,12 +60,23 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     if "weekly" and "all_sess" not in parameters["plot_types"] and parameters["plot_types"] != "":
         df_sess = df_sess.tail(parameters["last_N_sess"])
 
+    if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
+        interested_channels_raw = [ch[:3] for ch in interested_channels]
+        interested_channels = interested_channels +  interested_channels_raw
 
+    
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
     if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
-        df_fip = df_fip.rename(columns={'timestamps':'timestamps_WRONG', 'raw_timestamps': 'timestamps'})
-       
+        # use acquisition data to get the correct timestamps
+        for processed_channel in list(parameters.get("channels", {}).keys()):
+            raw_channel = processed_channel[:3]
+            raw_channels_loc = df_fip.query(f"event == '{raw_channel}'").index
+            processed_channels_loc = df_fip.query(f"event == '{processed_channel}'").index
+            df_fip.loc[processed_channels_loc, 'timestamps'] = df_fip.loc[raw_channels_loc, 'timestamps'].values
+        # drop all raw channel information
+        df_fip = df_fip[~df_fip['event'].isin(interested_channels_raw)].reset_index(drop=True)
+        
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
     if len(df_fip):
