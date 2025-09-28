@@ -171,6 +171,7 @@ def plot_row_panels(nwbs, channel, panels):
         return panels
 
     plot_RPE_by_avg_signal(df_trials_all, avg_signal_cols[0], ax = panels[4])
+    # panels[4].set_xlim([-1, 1])
     
     for ax in panels:
         ax.set_title("")
