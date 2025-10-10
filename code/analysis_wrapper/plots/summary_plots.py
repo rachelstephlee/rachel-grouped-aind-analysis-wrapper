@@ -17,7 +17,7 @@ N_COLS_PER_ROW = 5
 def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 
 
-    x = data['RPE_all'].values
+    x = data['RPE_earned'].values
     y = data[avg_signal_col].values
     try:
         lr = stats.linregress(x, y)
@@ -34,21 +34,21 @@ def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
 
     # clean data, split df_trials
-    df_trials_clean = df_trials.dropna(subset = [avg_signal_col, 'RPE_all'])
+    df_trials_clean = df_trials.dropna(subset = [avg_signal_col, 'RPE_earned'])
 
     if len(df_trials_clean) == 0:
-        print("no RPE_all values found, skipping plot")
+        print("no RPE_earned values found, skipping plot")
         return ax
 
-    df_trials_neg = df_trials_clean.query('RPE_all < 0')
-    df_trials_pos = df_trials_clean.query('RPE_all >= 0')
+    df_trials_neg = df_trials_clean.query('RPE_earned < 0')
+    df_trials_pos = df_trials_clean.query('RPE_earned >= 0')
 
 
-    # Scatter for RPE_all < 0
+    # Scatter for RPE_earned < 0
     if not df_trials_neg.empty:
         sns.scatterplot(
             data=df_trials_neg,
-            x='RPE_all',
+            x='RPE_earned',
             y=avg_signal_col ,
             hue='ses_idx',
             s=40,
@@ -60,12 +60,12 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
         ax.plot(x_fit, y_fit, color='blue', lw=2, label=f'RPE < 0: {slope:.3f}')
 
 
-    # lmplot for RPE_all > 0 (overlay line only)
+    # lmplot for RPE_earned > 0 (overlay line only)
     if not df_trials_pos.empty:
         # Plot scatter for positive as well for context
         sns.scatterplot(
             data=df_trials_pos,
-            x='RPE_all',
+            x='RPE_earned',
             y=avg_signal_col,
             hue='ses_idx',
             s=40,
@@ -76,7 +76,7 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
         )
         (x_fit, y_fit, slope) = get_RPE_by_avg_signal_fit(df_trials_pos, avg_signal_col)
         ax.plot(x_fit, y_fit, color='red', lw=2, label=f'RPE >= 0: {slope:.3f}')
-    ax.set_xlabel('RPE_all')
+    ax.set_xlabel('RPE_earned')
     ax.set_ylabel(avg_signal_col)
     ax.legend(framealpha=0.5, title = "LM fitted slopes", fontsize='small')
 

@@ -57,7 +57,7 @@ def get_nwb_processed(file_locations, **parameters) -> None:
                          .reset_index(drop=True)
               )
     # only read last N sessions unless daily, weekly plots are requested
-    if "weekly" and "all_sess" not in parameters["plot_types"] and parameters["plot_types"] != "":
+    if parameters["plot_types"]=="avg_lastN_sess":
         df_sess = df_sess.tail(parameters["last_N_sess"])
 
     if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
@@ -119,7 +119,7 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
 
     RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,1.1,1/3)]
 
-    df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_all'],# all versus earned not a huge difference
+    df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_earned'],# all versus earned not a huge difference
                         np.arange(-1,1.5,1/3), labels=[str(np.round(i,2)) for i in np.arange(-1,1.01,1/3)])
 
     (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
@@ -149,11 +149,11 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
         for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
             
             data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]
-            data = data.dropna(subset = [avg_signal_col, 'RPE_all'])
+            data = data.dropna(subset = [avg_signal_col, 'RPE_earned'])
             if len(data) == 0:
                 continue
-            data_neg = data[data['RPE_all'] < 0]
-            data_pos = data[data['RPE_all'] >= 0]
+            data_neg = data[data['RPE_earned'] < 0]
+            data_pos = data[data['RPE_earned'] >= 0]
 
             ses_date = pd.to_datetime(ses_idx.split('_')[1])
             (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
