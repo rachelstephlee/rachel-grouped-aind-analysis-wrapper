@@ -18,7 +18,6 @@ if script_dir in sys.path:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import analysis_util
 
 from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
 from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
@@ -60,22 +59,9 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     if parameters["plot_types"]=="avg_lastN_sess":
         df_sess = df_sess.tail(parameters["last_N_sess"])
 
-    if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
-        interested_channels_raw = [ch[:3] for ch in interested_channels]
-        interested_channels = interested_channels +  interested_channels_raw
-
     
     (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
 
-    if parameters["pipeline_v14"]: # TODO HACKY fix, take out once we fixed johannes' PR 
-        # use acquisition data to get the correct timestamps
-        for processed_channel in list(parameters.get("channels", {}).keys()):
-            raw_channel = processed_channel[:3]
-            raw_channels_loc = df_fip.query(f"event == '{raw_channel}'").index
-            processed_channels_loc = df_fip.query(f"event == '{processed_channel}'").index
-            df_fip.loc[processed_channels_loc, 'timestamps'] = df_fip.loc[raw_channels_loc, 'timestamps'].values
-        # drop all raw channel information
-        df_fip = df_fip[~df_fip['event'].isin(interested_channels_raw)].reset_index(drop=True)
         
     df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
     df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
@@ -91,15 +77,21 @@ def get_nwb_processed(file_locations, **parameters) -> None:
     return (df_sess, df_trials_final, df_events, df_fip_final) 
       
 
-def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) -> None:
-    processing = construct_processing_record(analysis_dispatch_inputs, **parameters)
+def run_analysis(
+    analysis_dispatch_inputs: AnalysisDispatchModel,
+    **parameters,
+) -> None:
+    processing = construct_processing_record(analysis_dispatch_inputs,**parameters)
     
-# DRY RUN
+    dry_run = parameters["dry_run"]
+
     if docdb_record_exists(processing):
         logger.info("Record already exists, skipping.")
         return
 
     (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
+
+
 
     # prepare computations for plotting 
 
@@ -117,10 +109,14 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
     df_trials.drop(columns=['reward_shifted'], inplace=True)
 
 
-    RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,1.1,1/3)]
+    # TODO: fix these binnings. i hate how the final bin is too tiny! 
+    RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,0.99,1/3)]
+
+    bins = np.arange(-1,1.01,1/3)
+    bins[-1] = 1.001
 
     df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_earned'],# all versus earned not a huge difference
-                        np.arange(-1,1.5,1/3), labels=[str(np.round(i,2)) for i in np.arange(-1,1.01,1/3)])
+                        bins = bins, right = True, labels=RPE_binned3_label_names)
 
     (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
 
@@ -185,9 +181,13 @@ def run_analysis(analysis_dispatch_inputs: AnalysisDispatchModel, **parameters) 
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
         
-    # # DRY RUN (comment in or out)
-    write_results_and_metadata(processing, ANALYSIS_BUCKET)
-    logger.info(f"Successfully wrote record to docdb and s3")
+    # # # DRY RUN (comment in or out)
+    if not dry_run:
+        logger.info("Running analysis and posting results")
+        write_results_and_metadata(processing, ANALYSIS_BUCKET)
+        logger.info("Successfully wrote record to docdb and s3")
+    else:
+        logger.info("Dry run complete. Results not posted")
 
 
 # Most of the below code will not need to change per-analysis
@@ -227,4 +227,5 @@ if __name__ == "__main__":
         analysis_specification = SummaryPlotsAnalysisSpecification.model_validate(analysis_specs).model_dump()
 
 
-        run_analysis(analysis_dispatch_inputs, **analysis_specification)
+        run_analysis(analysis_dispatch_inputs = analysis_dispatch_inputs, **analysis_specification)
+        
