@@ -17,9 +17,12 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
     name: str=Field(description="name of analysis")
     plot_types: str=Field(description="types of plots to generate", default = "avg_lastN_sess")
     last_N_sess: int=Field(description="number of last sessions to plot", default = 5)
-    channels: dict[str, str] = Field(..., description="Dictionary of channels to plot from. Keys = channel name, Value = intended location and measurement")
+    channels: dict[str, str] = Field(..., description="Dictionary of channels to plot from. \
+                    Keys = channel name, Value = intended location and measurement. \
+                    NO preprocessing method included in suffix.")
+    preprocessing: str=Field(description="preprocessing_method", default = "dff-bright_mc-iso-IRLS")
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
-    pipeline_v14: bool=Field(default=False, description="Is the data coming from pipeline v14 and need timestamps/raw_timestamps swapped")
+    dry_run: bool=Field(default=True, description="Dry run")
 # only saving plots, no outputs needed 
 # class SummaryResultsAnalysisOutputs(GenericModel):
 #     """
