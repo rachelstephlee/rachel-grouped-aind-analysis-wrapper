@@ -18,7 +18,6 @@ if script_dir in sys.path:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import analysis_util
 
 
 from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
