@@ -292,6 +292,10 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
 
 
 def plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc=None):
+    """
+    plot_all_sess the DA version-- 
+    plots L/R, split by RPE, baseline, split by RPE after baseline removal, slope for average response. 
+    """
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
     mpl.rcParams["axes.spines.right"] = False
@@ -343,7 +347,7 @@ def plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_{subject_id}_{channel}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
+        plt.savefig(f"{loc}all_sess_{subject_id}_{channel}.png",bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
 
 def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5, loc = None):
@@ -408,7 +412,7 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5,
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}avg_signal_{subject_id}_{channel}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
+        plt.savefig(f"{loc}avg_signal_{subject_id}_{channel}.png",bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
 
 def plot_per_channel_behavior_data(nwb, loc=None):

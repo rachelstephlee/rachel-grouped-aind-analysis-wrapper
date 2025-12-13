@@ -109,7 +109,7 @@ def get_dummy_nwbs_by_week(df_sess,df_trials, df_events, df_fip):
     for week_interval in week_interval_list:
         # Check if ses_idx exists in all 3 dataframes
         if (
-            week_interval in df_events['week_interval'].valuesand
+            week_interval in df_events['week_interval'].values and
             week_interval in df_fip['week_interval'].values and
             week_interval in df_trials['week_interval'].values
         ):

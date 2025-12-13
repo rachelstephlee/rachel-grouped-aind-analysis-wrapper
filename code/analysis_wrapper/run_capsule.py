@@ -5,9 +5,6 @@ from pathlib import Path
 from hdmf_zarr import NWBZarrIO
 
 import warnings
-from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
-from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
-from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
 
 
 import sys
@@ -18,7 +15,6 @@ if script_dir in sys.path:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import analysis_util
 
 from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
 from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
@@ -27,11 +23,14 @@ from analysis_wrapper.analysis_model import (
     SummaryPlotsAnalysisSpecification, SummaryPlotsAnalysisSpecificationCLI
 )
 import subprocess
+import analysis_wrapper.rachel_analysis_framework_utils as r_utils
 
 # for analysis code
 import numpy as np
 import pandas as pd 
 from analysis_wrapper.plots import summary_plots
+import analysis_util
+from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
 
 
 DATA_PATH: Path = Path("/data")  # TODO: don't hardcode
@@ -39,43 +38,6 @@ ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
 
 
-def get_nwb_processed(file_locations, **parameters) -> None:
-    interested_channels = list(parameters["channels"].keys())
-    df_sess = nwb_utils.create_df_session(file_locations)
-    df_sess['s3_location'] = file_locations
-
-    # check for multiple sessions on the same day
-    dup_mask = df_sess.duplicated(subset=['ses_idx'], keep=False)
-    if dup_mask.any():
-        warnings.warn(f"Duplicate sessions found for ses_idx: {df_sess[dup_mask]['ses_idx'].tolist()}."
-                        "Keeping the one with more finished trials.")
-        df_sess = (df_sess.sort_values(by=['ses_idx','finished_trials'], ascending=False)
-                         .drop_duplicates(subset=['ses_idx'], keep='first')
-                  )
-    # sort sessions
-    df_sess = (df_sess.sort_values(by=['session_date']) 
-                         .reset_index(drop=True)
-              )
-    # only read last N sessions unless daily, weekly plots are requested
-    if parameters["plot_types"]=="avg_lastN_sess":
-        df_sess = df_sess.tail(parameters["last_N_sess"])
-
-    
-    (df_trials, df_events, df_fip) = co_utils.get_all_df_for_nwb(filename_sessions=df_sess['s3_location'].values, interested_channels = interested_channels)
-
-        
-    df_trials_fm, df_sess_fm = co_utils.get_foraging_model_info(df_trials, df_sess, loc = None, model_name = parameters["fitted_model"])
-    df_trials_enriched = enrich_dfs.enrich_df_trials_fm(df_trials_fm)
-    if len(df_fip):
-        [df_fip_all, df_trials_fip_enriched] = enrich_dfs.enrich_fip_in_df_trials(df_fip, df_trials_enriched)
-        (df_fip_final, df_trials_final, df_trials_fip) = enrich_dfs.remove_tonic_df_fip(df_fip_all, df_trials_enriched, df_trials_fip_enriched)
-    else:
-        warnings.warn(f"channels {interested_channels} not found in df_fip.")
-        df_fip_final = df_fip
-        df_trials_final = df_trials 
-    
-    # return all dataframes
-    return (df_sess, df_trials_final, df_events, df_fip_final) 
       
 
 def run_analysis(
@@ -90,7 +52,7 @@ def run_analysis(
         logger.info("Record already exists, skipping.")
         return
 
-    (df_sess, df_trials, df_events, df_fip) = get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
+    (df_sess, df_trials, df_events, df_fip) = r_utils.get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
 
 
 
@@ -110,7 +72,6 @@ def run_analysis(
     df_trials.drop(columns=['reward_shifted'], inplace=True)
 
 
-    # TODO: fix these binnings. i hate how the final bin is too tiny! 
     RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,0.99,1/3)]
 
     bins = np.arange(-1,1.01,1/3)
@@ -122,6 +83,8 @@ def run_analysis(
     (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
 
 
+    # TODO: will need to refactor code so there's flexibility on the plots that come out
+    #       consult alex? or figure it out on my own. 
     # get average activity 
     data_column = 'data_z_norm'
     alignment_event='choice_time_in_session'
@@ -139,42 +102,46 @@ def run_analysis(
                             output_col = avg_signal_col
                         )
         
-        # get rpe slope per session 
+    #     # get rpe slope per session 
 
-        df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week for nwb in nwb_week])
-        rpe_slope = []
-        for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
+    #     df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week for nwb in nwb_week])
+    #     rpe_slope = []
+    #     for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
             
-            data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]
-            data = data.dropna(subset = [avg_signal_col, 'RPE_earned'])
-            if len(data) == 0:
-                continue
-            data_neg = data[data['RPE_earned'] < 0]
-            data_pos = data[data['RPE_earned'] >= 0]
+    #         data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]
+    #         data = data.dropna(subset = [avg_signal_col, 'RPE_earned'])
+    #         if len(data) == 0:
+    #             continue
+    #         data_neg = data[data['RPE_earned'] < 0]
+    #         data_pos = data[data['RPE_earned'] >= 0]
 
-            ses_date = pd.to_datetime(ses_idx.split('_')[1])
-            (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
-            (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
-            rpe_slope.append([ses_date, slope_pos, slope_neg])
-        rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
-        rpe_slope_dict[channel] = rpe_slope
+    #         ses_date = pd.to_datetime(ses_idx.split('_')[1])
+    #         (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
+    #         (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
+    #         rpe_slope.append([ses_date, slope_pos, slope_neg])
+    #     rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
+    #     rpe_slope_dict[channel] = rpe_slope
 
-    subject_id = df_sess['subject_id'].unique()[0]
-    # Concatenate with keys, turning dict keys into an index
-    combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
-    combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
+    # subject_id = df_sess['subject_id'].unique()[0]
+    # # Concatenate with keys, turning dict keys into an index
+    # combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
+    # combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
 
-    combined_rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
+    # combined_rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
 
 
     # plot summary plots
-    plot_loc = '/results/plots/'
+    if dry_run:
+        plot_loc = '/root/capsule/scratch/plots_TEST/'
+    else:
+        plot_loc = '/results/plots/'
 
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
     if "avg_lastN_sess" in parameters["plot_types"]:
         summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, parameters["channels"], final_N_sess = 5, loc = plot_loc)
+    
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
     for channel, channel_loc in parameters['channels'].items():
         if "all_sess" in parameters["plot_types"]:
