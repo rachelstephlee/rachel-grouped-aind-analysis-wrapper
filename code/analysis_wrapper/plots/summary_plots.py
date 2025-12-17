@@ -3,6 +3,8 @@ import matplotlib as mpl
 import seaborn as sns
 from aind_dynamic_foraging_basic_analysis.plot import plot_fip as pf
 from aind_dynamic_foraging_basic_analysis.plot import plot_foraging_session as pb
+from aind_dynamic_foraging_basic_analysis.plot import plot_session_scroller as pss
+
 import matplotlib.gridspec as gridspec
 
 
@@ -550,7 +552,6 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
     subject_id = df_sess['subject_id'].unique()[0]
 
     # use constrained_layout to avoid tight_layout warnings with complex nested axes
-    print("am i being called twice?")
     fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 1)), constrained_layout=True)
     
     plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
@@ -729,40 +730,75 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5,
     if loc is not None:
         plt.savefig(f"{loc}avg_signal_{subject_id}_{channel}.png",bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
+def set_bar_percentages(ax, df, x_col, hue_col):
+    """
+    Set bar heights to percent within each hue for a seaborn countplot.
+    Optionally add hatching to bars for a specific hue value.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes containing the countplot.
+    df : pd.DataFrame
+        DataFrame used for the plot.
+    x_col : str
+        Column for x-axis categories.
+    hue_col : str
+        Column for hue categories.
+    """
+    hues = np.sort(df[hue_col].unique())
+    x_vals = np.sort(df[x_col].unique())
+    n_x = len(x_vals)
+    n_hue = len(hues)
+    hatch_kwargs = dict(edgecolor='black', alpha=0.8)
+
+    bar_idx = 0
+    for hue_idx, hue in enumerate(hues):
+        for x_idx, x_val in enumerate(x_vals):
+            df_x = df[df[x_col] == x_val]
+            total = len(df_x)            # per-x normalization
+            count = (df_x[hue_col] == hue).sum()
+            percent = 100 * count / total if total > 0 else 0
+            if count > 0:
+                ax.patches[bar_idx].set_height(percent)
+                bar_idx = bar_idx + 1
 
 def plot_per_channel_behavior_data(nwb, loc=None):
-    fig = plt.figure(figsize=(12, 6))  # Removed 3rd row, so reduce height
-    gs = gridspec.GridSpec(3,7, figure=fig, height_ratios=[1,0.75, 1])
+    fig = plt.figure(figsize=(12, 6),constrained_layout=True)
+    # three rows: small legend row, main foraging row, bottom summary row
+    gs = gridspec.GridSpec(3, 5, figure=fig, height_ratios=[3,1, 1])
 
     if isinstance(nwb,list):
         session_id_title = ', '.join([nwb_i.session_id for nwb_i in nwb])
     else:
         session_id_title = nwb.session_id
-    plt.suptitle(f'{session_id_title}')
+    plt.suptitle(f'{session_id_title}', y = 0.99)
 
     # --- First row ---
-    # Top row (full width)
+    # Top row (full width)   
 
+    # Top: foraging session plot
     big_ax_top = fig.add_subplot(gs[0, :])
-    big_ax_bottom = fig.add_subplot(gs[1, :], sharex=big_ax_top)
 
-    # replaced session_scroller with foraging plot    
-    # pss.plot_session_scroller(nwb, plot_list=[], ax = [big_ax_top, big_ax_bottom], fig = fig, 
-    #                           metrics = [["Q_left","Q_right", "Q_Delta",(-1, 1.2)]])
+    [_, foraging_session_axes] = pb.plot_foraging_session_nwb(nwb, ax=big_ax_top)
+    foraging_session_axes[1].set_xlabel("")
 
-    # big_ax_top.set_xlim(-200, 1400)
-    # big_ax_bottom.set_xlim(-200,1400)
-    # big_ax_top.set_title(big_ax_bottom.get_title())
-    # big_ax_bottom.set_xlabel(big_ax_top.get_xlabel())
-    # big_ax_bottom.set_title("")
-    # big_ax_top.set_xlabel("")
-    # big_ax_bottom.set_ylabel("Q value")
-    # big_ax_bottom.legend()
-    pb.plot_foraging_session_nwb(nwb, ax = big_ax_top)
+
+    # Bottom slice:
+    big_ax_bottom = fig.add_subplot(gs[1, :], sharex=foraging_session_axes[1])
+    big_ax_bottom.plot(nwb.df_trials['Q_sum'], label = 'Q_sum', color = 'green')
+    big_ax_bottom.plot(nwb.df_trials['Q_chosen'], label = 'Q_chosen', color = 'magenta')
+    big_ax_bottom.legend(fontsize = 'x-small', title = "", bbox_to_anchor=(0.5, 1.05), 
+                # x=0.5 center, y>1 places legend above the axis
+                ncol=2,
+                frameon=False)
+    big_ax_bottom.spines['top'].set_visible(False)
+    big_ax_bottom.spines['right'].set_visible(False)
+    big_ax_bottom.set_xlabel("Trial Number")
 
 
     # ax1: Response time histogram (left 4 columns)
-    ax1 = fig.add_subplot(gs[2, :3])  
+    ax1 = fig.add_subplot(gs[-1, :3])  
     ax1.set_title("Response Time Histogram")
 
     stay_leave_palette = {'False': 'Lime', 'True': 'Green', 
@@ -778,6 +814,7 @@ def plot_per_channel_behavior_data(nwb, loc=None):
         bins=100,
         alpha=0.8,
         stat='count',
+        legend=True,
         ax=ax1
     )
     ax1.set_xlabel('Response Time (s)')
@@ -785,10 +822,11 @@ def plot_per_channel_behavior_data(nwb, loc=None):
     ax1.set_xlim(0)
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
+    ax1.legend(fontsize = "small", frameon = False)
 
 
     # ax2: % Stay/Leave (very narrow)
-    ax2 = fig.add_subplot(gs[2, 3])
+    ax2 = fig.add_subplot(gs[-1, -2])
     df_trials_prev_rew = pd.concat([nwb.df_trials, nwb.df_trials.query('rewarded_prev == True')],
                              keys = ['all trials', 'prev rew']).reset_index(level=[0])
     ax2.set_title("% Stay/Leave")
@@ -808,16 +846,17 @@ def plot_per_channel_behavior_data(nwb, loc=None):
     set_bar_percentages(stay_bars, df_trials_prev_rew, x_col='level_0', hue_col='stay_label')
     
 
-    ax2.set_ylabel('Percent')
+    
     ax2.set_ylim([0, 100])
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
     ax2.set_xlabel("")
+    ax2.set_ylabel("")
     ax2.tick_params(axis='x', labelrotation=45)
 
 
     # ax3: % Stay/Leave | Reward (very narrow)
-    ax3 = fig.add_subplot(gs[2, 4])
+    ax3 = fig.add_subplot(gs[-1, -1])
     df_trials_rew = pd.concat([nwb.df_trials, nwb.df_trials.query('reward_all == True')],
                              keys = ['all trials', 'rew trials']).reset_index(level=[0])
     ax3.set_title("% Choice")
@@ -846,30 +885,11 @@ def plot_per_channel_behavior_data(nwb, loc=None):
     ax3.spines['top'].set_visible(False)
     ax3.spines['right'].set_visible(False)
     ax3.set_xlabel("")
+    ax3.set_ylabel("")
     ax3.tick_params(axis='x', labelrotation=45)
+    
+    plt.tight_layout(pad = 0, h_pad = 0, w_pad = 1.08)
 
-
-    # ax5: Coefficient plot (right quarter)
-    ax5 = fig.add_subplot(gs[2, 5:])
-    ax5.set_title("Last Lick\n Response Time") 
-    # Create histogram with hue for reward
-    sns.histplot(
-        data=nwb.last_licks,
-        x='response_time',
-        hue='reward_all',
-        palette={0: 'grey', 1: 'red'},
-        bins=100,
-        alpha=0.8,
-        stat='count',
-        ax = ax5
-    )
-
-    ax5.set_xlabel('response time (s)')
-    ax5.set_ylabel('count')
-    ax5.set_xlim(0)
-    ax5.spines['top'].set_visible(False)
-    ax5.spines['right'].set_visible(False)
-    plt.tight_layout()
     if loc is not None:
         plt.savefig(f'{loc}{nwb.session_id.replace("behavior_","")}_behavior.png')
         plt.close()
