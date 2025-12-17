@@ -164,7 +164,7 @@ def run_analysis(
 
     # plot summary plots
     if dry_run:
-        plot_loc = '/root/capsule/scratch/plots_TEST/'
+        plot_loc = '/root/capsule/results/plots_TEST/'
     else:
         plot_loc = '/results/plots/'
 
