@@ -2,9 +2,14 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
 from aind_dynamic_foraging_basic_analysis.plot import plot_fip as pf
+from aind_dynamic_foraging_basic_analysis.plot import plot_foraging_session as pb
+import matplotlib.gridspec as gridspec
+
+
 import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from matplotlib.lines import Line2D
 import seaborn as sns
 from scipy import stats
 
@@ -13,6 +18,18 @@ output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_colu
 
 
 N_COLS_PER_ROW = 5
+FONTSIZE = 14
+mpl.rcParams.update({
+    "font.size": FONTSIZE,
+    "legend.fontsize": FONTSIZE+ 5,
+    "axes.titlesize": FONTSIZE,
+    "axes.labelsize": FONTSIZE,
+    "xtick.labelsize": FONTSIZE,
+    "ytick.labelsize": FONTSIZE,
+    "figure.titlesize": FONTSIZE
+})
+
+
 
 def get_RPE_by_avg_signal_fit(data, avg_signal_col):
 
@@ -85,7 +102,24 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
 
 
 def plot_row_panels(nwbs, channel, panels):
-    
+    """
+    Plot a row of summary panels for a given set of NWB sessions and a specific channel.
+
+    This function generates a set of five panels summarizing neural and behavioral data:
+        1. PSTH for left vs right choices.
+        2. PSTH split by RPE-binned3 categories.
+        3. Baseline z-scored df/f by number of past rewards.
+        4. PSTH split by RPE-binned3 with baseline removed.
+        5. Scatter and regression of RPE vs average signal.
+
+    Args:
+        nwbs (list): List of NWB session objects, each with a .df_trials DataFrame.
+        channel (str): Channel name to plot.
+        panels (list): List of matplotlib Axes objects (length 5) to plot into.
+
+    Returns:
+        list: The input list of matplotlib Axes, with plots drawn.
+    """
     trial_width_choice = [-1, 4]
     df_trials_all = pd.concat([nwb.df_trials for nwb in nwbs])
     RPE_binned3_label_names = df_trials_all['RPE-binned3'].cat.categories.astype(str).tolist()
@@ -291,6 +325,287 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
         plt.close()
 
 
+def plot_row_panels_PSTH_legends(df_trials_all, panels):
+    """
+    Draw legend panels for the five columns for the function plot_row_panels_PSTH
+    df_trials_all: concatenated df_trials DataFrame (or None) used to build category labels.
+    panels: list of 5 matplotlib axes to draw legends into.
+    """
+    # build label lists from df if available
+    if df_trials_all is not None:
+        RPE_labels = df_trials_all['RPE-binned3'].cat.categories.astype(str).tolist() if 'RPE-binned3' in df_trials_all else []
+        Qch_labels = df_trials_all['Qch-binned3'].cat.categories.astype(str).tolist() if 'Qch-binned3' in df_trials_all else []
+    else:
+        RPE_labels = []
+        Qch_labels = []
+
+    # column 0: choice legend
+    choice_labels = ['left', 'right', 'ignore']
+    choice_colors = ['blue', 'red', 'purple']
+    # proxy artists (empty) — we'll color the legend text via labelcolor
+    handles = [Line2D([], [], linestyle='', marker='') for _ in choice_colors]
+    panels[0].axis('off')
+    panels[0].legend(handles, choice_labels, title='choice', ncol=1, loc='center', frameon=False, labelcolor=choice_colors)
+
+    # column 1: reward legend (vertical colored text)
+    rew_labels = ['rew', 'no-rew']
+    rew_colors = ['magenta', 'grey']
+    handles = [Line2D([], [], linestyle='', marker='') for _ in rew_colors]
+    panels[1].axis('off')
+    panels[1].legend(handles, rew_labels, title='reward', ncol=1, loc='center', frameon=False, labelcolor=rew_colors)
+
+    # column 2: RPE bins legend (two columns)
+    if RPE_labels:
+        RPE_colors = sns.color_palette("mako", len(RPE_labels)).as_hex()
+        handles = [Line2D([], [], linestyle='', marker='') for _ in RPE_colors]
+        panels[2].axis('off')
+        panels[2].legend(handles, RPE_labels, title='RPE', ncol=2, loc='center', frameon=False, labelcolor=RPE_colors)
+    else:
+        panels[2].text(0.5, 0.5, "RPE", ha='center', va='center')
+    panels[2].axis('off')
+
+    # column 3: Qch bins legend (two columns)
+    if Qch_labels:
+        Qch_colors = sns.color_palette("vlag", len(Qch_labels)).as_hex()
+        handles = [Line2D([], [], linestyle='', marker='') for _ in Qch_colors]
+        panels[3].axis('off')
+        panels[3].legend(handles, Qch_labels, title='Qch', ncol=2, loc='center', frameon=False, labelcolor=Qch_colors)
+    else:
+        panels[3].text(0.5, 0.5, "Qch", ha='center', va='center')
+    panels[3].axis('off')
+
+    # column 2: RPE bins legend (two columns)
+    if RPE_labels:
+        RPE_colors = sns.color_palette("mako", len(RPE_labels)).as_hex()
+        handles = [Line2D([], [], linestyle='', marker='') for _ in RPE_colors]
+        panels[2].axis('off')
+        panels[2].legend(handles, RPE_labels, title='RPE', ncol=2, loc='center', frameon=False, labelcolor=RPE_colors)
+    else:
+        panels[2].text(0.5, 0.5, "RPE", ha='center', va='center')
+    panels[2].axis('off')
+
+    # column 3: Qch bins legend (two columns)
+    if Qch_labels:
+        Qch_colors = sns.color_palette("vlag", len(Qch_labels)).as_hex()
+        handles = [Line2D([], [], linestyle='', marker='') for _ in Qch_colors]
+        panels[3].axis('off')
+        panels[3].legend(handles, Qch_labels, title='Qch', ncol=2, loc='center', frameon=False, labelcolor=Qch_colors)
+    else:
+        panels[3].text(0.5, 0.5, "Qch", ha='center', va='center')
+    panels[3].axis('off')
+
+    # column 4: baseline legend (single colored label)
+    handles = [Line2D([], [], linestyle='', marker='')]
+    panels[4].axis('off')
+    panels[4].legend([])
+
+    return panels
+
+def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
+    """
+    Plot a row of summary panels for a given set of NWB sessions and a specific channel.
+
+    This function generates a set of five panels summarizing neural and behavioral data:
+        1. PSTH for left vs right choices.
+        2. PSTH split by RPE-binned3 categories.
+        3. Baseline z-scored df/f by number of past rewards.
+        4. PSTH split by RPE-binned3 with baseline removed.
+        5. Scatter and regression of RPE vs average signal.
+
+    Args:
+        nwbs (list): List of NWB session objects, each with a .df_trials DataFrame.
+        channel (str): Channel name to plot.
+        panels (list): List of matplotlib Axes objects (length 5) to plot into.
+
+    Returns:
+        list: The input list of matplotlib Axes, with plots drawn.
+    """
+    trial_width_choice = [-1, 4]
+    df_trials_all = pd.concat([nwb.df_trials for nwb in nwbs])
+    RPE_binned3_label_names = df_trials_all['RPE-binned3'].cat.categories.astype(str).tolist()
+    Qch_binned3_label_names = df_trials_all['Qch-binned3'].cat.categories.astype(str).tolist()
+
+    if legend_panel:
+        return plot_row_panels_PSTH_legends(df_trials_all, panels)
+    
+    if len(nwbs) > 1:
+        error_type = 'sem_over_sessions'
+    else:
+        error_type = 'sem'
+    
+    # 1. Choice L vs R
+    pf.plot_fip_psth_compare_alignments(
+            nwbs,
+            [{"left": nwb.df_trials.query("choice == 0").choice_time_in_session.values,
+              "right": nwb.df_trials.query("choice == 1").choice_time_in_session.values,
+              "ignore":nwb.df_trials.query("choice == 2").choice_time_in_session.values} for nwb in nwbs],
+            channel,
+            tw=trial_width_choice,
+            extra_colors={"left": 'b', "right": 'r', "ignore":"purple"},
+            data_column="data_z",
+            error_type=error_type,
+            ax=panels[0],
+        )
+
+    # 2 Reward/No Reward 
+    pf.plot_fip_psth_compare_alignments(
+            nwbs,
+            [{"rew": nwb.df_trials.query("earned_reward == 1").choice_time_in_session.values,
+              "no-rew": nwb.df_trials.query("earned_reward == 0").choice_time_in_session.values} for nwb in nwbs],
+            channel,
+            tw=trial_width_choice,
+            extra_colors={"rew": 'magenta', "no-rew": 'grey'},
+            data_column="data_z",
+            error_type=error_type,
+            ax=panels[1],
+        )
+    
+
+     
+    # 3 RPE_binned3
+    get_binned3_dfs = lambda df_trials, val, label_names: [
+        df_trials[df_trials[val] == str(bin_labels)]['choice_time_in_session'].values for bin_labels in label_names
+    ]
+    RPE_binned3_dfs_dicts = [
+        dict(zip(RPE_binned3_label_names, get_binned3_dfs(nwb.df_trials, "RPE-binned3", RPE_binned3_label_names))) for nwb in nwbs]
+    pf.plot_fip_psth_compare_alignments(
+            nwbs, RPE_binned3_dfs_dicts, channel,
+            extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
+            tw=trial_width_choice, censor=True, data_column="data_z", error_type=error_type, ax=panels[2]
+        )
+    
+    # 4 Q_val binned3
+    Qch_binned3_dfs_dicts = [
+        dict(zip(Qch_binned3_label_names, get_binned3_dfs(nwb.df_trials, "Qch-binned3",Qch_binned3_label_names))) for nwb in nwbs]
+    pf.plot_fip_psth_compare_alignments(
+            nwbs, Qch_binned3_dfs_dicts, channel,
+            extra_colors=dict(zip(Qch_binned3_label_names, sns.color_palette("vlag", len(Qch_binned3_label_names)).as_hex())),
+            tw=trial_width_choice, censor=True, data_column="data_z", error_type=error_type, ax=panels[3]
+        )
+
+
+
+    # 5. Baseline by num_reward_past (grand mean/SE)
+    df_trials_all = df_trials_all.query(
+        'num_reward_past > -7 and num_reward_past < 7'
+    ).sort_values('trial')
+    if len(nwbs) > 1:
+        grouped = (
+                df_trials_all
+                .groupby(['ses_idx', 'num_reward_past'])[f'data_z_{channel}_baseline']
+                .mean()
+                .reset_index()
+            )
+        agg = (
+                grouped
+                .groupby('num_reward_past')[f'data_z_{channel}_baseline']
+                .agg(['mean', 'sem'])
+                .reset_index()
+            )
+        panels[4].bar(
+                agg['num_reward_past'],
+                agg['mean'],
+                yerr=agg['sem'],
+                color=sns.color_palette('vlag', len(agg)),
+                capsize=4,
+        )
+        panels[4].set_ylabel(f'data_z_{channel}_baseline')
+    else:
+        sns.barplot(
+                x='num_reward_past',
+                y=f'data_z_{channel}_baseline',
+                data=df_trials_all,
+                palette='vlag',
+                hue='num_reward_past',
+                errorbar='se',
+                dodge=False,
+                legend=False,
+                ax=panels[4]
+            )
+    panels[4].set_title('Baseline of z-scored df/f')
+
+    
+    for ax in panels:
+        ax.set_title("")
+        ax.set_xlabel("")
+
+    for idx in np.arange(1,4):
+        panels[idx].set_ylabel("")
+    return panels
+
+
+
+def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
+    """
+    PSTH-focused version of plot_all_sess.
+    Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
+    producing one two-row block per session in nwbs_all.
+    """
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams["axes.spines.right"] = False
+    mpl.rcParams["axes.spines.top"] = False
+
+    nrows = len(nwbs_all)
+    ncols = N_COLS_PER_ROW
+    subject_id = df_sess['subject_id'].unique()[0]
+
+    # use constrained_layout to avoid tight_layout warnings with complex nested axes
+    print("am i being called twice?")
+    fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 1)), constrained_layout=True)
+    
+    plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
+
+    # allocate one extra top row for the shared legend panels
+    outer = GridSpec(nrows + 1, 1, figure=fig)
+
+    # df_trials_all for consistent legend labels/colors across rows
+    df_trials_all = pd.concat([nwb.df_trials for nwb in nwbs_all])
+
+    # Top: single legend row spanning the top outer[0]
+    legend_inner = GridSpecFromSubplotSpec(1, ncols, subplot_spec=outer[0], height_ratios=[0.15], hspace=0.0, wspace=0.3)
+    legend_axes = [fig.add_subplot(legend_inner[0, col]) for col in range(ncols)]
+    plot_row_panels_PSTH_legends(df_trials_all, legend_axes)
+
+    # keep reference to the PSTH axes for final labeling
+    axes_rows = [None] * nrows
+
+    # For each session, create a single-row grid of ncols for PSTH panels
+    for row, nwb in enumerate(nwbs_all):
+        inner = GridSpecFromSubplotSpec(
+            2,
+            ncols,
+            subplot_spec=outer[row + 1],
+            height_ratios=[0.12, 0.88],
+            hspace=0.0,
+            wspace=0.3,
+        )
+        # title row (single axis spanning all columns)
+        title_ax = fig.add_subplot(inner[0, :])
+        title_ax.axis('off')
+        title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
+
+        # PSTH panels for this session (place in second row)
+        psth_axes = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
+        plot_row_panels_PSTH([nwb], channel, psth_axes, legend_panel=False)
+
+        axes_rows[row] = psth_axes
+    
+    # set bottom row xlabels using the last row panels
+    for panel_legend in [axes_rows[-1],axes_rows[0]]:
+        if panel_legend is not None:
+            panel_legend[-1].set_xlabel('Consecutive No-Reward and Reward Trials')
+            panel_legend[0].set_xlabel('Time (s) from choice')
+            panel_legend[1].set_xlabel('Time (s) from choice')
+            panel_legend[2].set_xlabel('Time (s) from choice')
+            panel_legend[3].set_xlabel('Time (s) from choice')
+        if len(axes_rows) < 5:
+            break
+
+    if loc is not None:
+        plt.savefig(f"{loc}all_sess_PSTH_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi=300)
+        plt.close(fig)
+
+
 def plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc=None):
     """
     plot_all_sess the DA version-- 
@@ -431,17 +746,19 @@ def plot_per_channel_behavior_data(nwb, loc=None):
     big_ax_top = fig.add_subplot(gs[0, :])
     big_ax_bottom = fig.add_subplot(gs[1, :], sharex=big_ax_top)
 
-    pss.plot_session_scroller(nwb, plot_list=[], ax = [big_ax_top, big_ax_bottom], fig = fig, 
-                              metrics = [["Q_left","Q_right", "Q_Delta",(-1, 1.2)]])
+    # replaced session_scroller with foraging plot    
+    # pss.plot_session_scroller(nwb, plot_list=[], ax = [big_ax_top, big_ax_bottom], fig = fig, 
+    #                           metrics = [["Q_left","Q_right", "Q_Delta",(-1, 1.2)]])
 
-    big_ax_top.set_xlim(-200, 1400)
-    big_ax_bottom.set_xlim(-200,1400)
-    big_ax_top.set_title(big_ax_bottom.get_title())
-    big_ax_bottom.set_xlabel(big_ax_top.get_xlabel())
-    big_ax_bottom.set_title("")
-    big_ax_top.set_xlabel("")
-    big_ax_bottom.set_ylabel("Q value")
-    big_ax_bottom.legend()
+    # big_ax_top.set_xlim(-200, 1400)
+    # big_ax_bottom.set_xlim(-200,1400)
+    # big_ax_top.set_title(big_ax_bottom.get_title())
+    # big_ax_bottom.set_xlabel(big_ax_top.get_xlabel())
+    # big_ax_bottom.set_title("")
+    # big_ax_top.set_xlabel("")
+    # big_ax_bottom.set_ylabel("Q value")
+    # big_ax_bottom.legend()
+    pb.plot_foraging_session_nwb(nwb, ax = big_ax_top)
 
 
     # ax1: Response time histogram (left 4 columns)

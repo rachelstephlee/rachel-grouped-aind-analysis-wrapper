@@ -56,8 +56,9 @@ def run_analysis(
 
 
 
-    # prepare computations for plotting 
+    ############## prepare computations for plotting ###############
 
+    ##### PART I: REWARD #######
     df_trials['reward_all'] = df_trials['earned_reward'] + df_trials['extra_reward']
     # Compute num_reward_past and num_no_reward_past
     df_trials['reward_shifted'] = df_trials.groupby('ses_idx')['reward_all'].shift(1)  # Shift to look at past values
@@ -71,7 +72,8 @@ def run_analysis(
     # Drop the temporary column
     df_trials.drop(columns=['reward_shifted'], inplace=True)
 
-
+    ##### PART II: BINNING RPE #######
+    # get RPE binned columns. 
     RPE_binned3_label_names = [str(np.round(i,2)) for i in np.arange(-1,0.99,1/3)]
 
     bins = np.arange(-1,1.01,1/3)
@@ -79,6 +81,33 @@ def run_analysis(
 
     df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_earned'],# all versus earned not a huge difference
                         bins = bins, right = True, labels=RPE_binned3_label_names)
+    
+    ##### PART III: BINNING QCHOSEN #######
+    bins = [0.0, 1/3, 2/3, 1.01]
+    q_labels = ["Qch 0", "Qch 0.33", "Qch 0.66"]
+
+    q_bin = pd.cut(df_trials['Q_chosen'], bins=bins, labels=q_labels, include_lowest=True, right=True)
+    reward_label = df_trials['earned_reward'].map({True: "R+", False: "R-"})
+
+    # build combined label series (None where q_bin is NA)
+    reward_Qcat_series = pd.Series(
+        np.where(q_bin.isna(), None, reward_label.astype(str) + " (" + q_bin.astype(str) + ")"),
+        index=df_trials.index
+    )
+
+    # ordered categories you requested
+    Qch_binned3_label_names = [
+        "R- (Qch 0)", "R- (Qch 0.33)", "R- (Qch 0.66)",
+        "R+ (Qch 0)", "R+ (Qch 0.33)", "R+ (Qch 0.66)"
+    ]
+
+    # assign final ordered categorical to dataframe (no intermediate column left behind)
+    df_trials['Qch-binned3'] = pd.Categorical(reward_Qcat_series, categories=Qch_binned3_label_names, ordered=True)
+
+    ##### PART IV: GETTING STAY/LEAVE #######
+    _choice_shifted = df_trials.groupby('ses_idx')['choice'].shift(1)
+    df_trials['stay'] = df_trials['choice'] == _choice_shifted
+    df_trials['switch'] = df_trials['choice'] != _choice_shifted
 
     (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
 
@@ -145,7 +174,7 @@ def run_analysis(
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
     for channel, channel_loc in parameters['channels'].items():
         if "all_sess" in parameters["plot_types"]:
-            summary_plots.plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+            summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
         
