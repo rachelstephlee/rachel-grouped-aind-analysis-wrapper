@@ -722,8 +722,8 @@ def plot_per_sess_behavior_data(nwb, fig, panels):
 
     # Bottom slice:
     big_ax_bottom = fig.add_subplot(panels[2,:],sharex = foraging_session_axes[1])
-    big_ax_bottom.plot(nwb.df_trials['Q_sum'], label = 'Q_sum', color = 'green')
-    big_ax_bottom.plot(nwb.df_trials['Q_chosen'], label = 'Q_chosen', color = 'magenta')
+    big_ax_bottom.plot(nwb.df_trials['Q_sum'].values, label = 'Q_sum', color = 'green')
+    big_ax_bottom.plot(nwb.df_trials['Q_chosen'].values, label = 'Q_chosen', color = 'magenta')
     big_ax_bottom.legend(fontsize = 'x-small', title = "", bbox_to_anchor=(0.5, 1.05), 
                 # x=0.5 center, y>1 places legend above the axis
                 ncol=2,
