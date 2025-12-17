@@ -61,16 +61,13 @@ def run_analysis(
     ##### PART I: REWARD #######
     df_trials['reward_all'] = df_trials['earned_reward'] + df_trials['extra_reward']
     # Compute num_reward_past and num_no_reward_past
-    df_trials['reward_shifted'] = df_trials.groupby('ses_idx')['reward_all'].shift(1)  # Shift to look at past values
+    df_trials['rewarded_prev'] = df_trials.groupby('ses_idx')['reward_all'].shift(1)  # Shift to look at past values
 
     df_trials['num_reward_past'] = df_trials.groupby(
-                            (df_trials['reward_shifted'] != df_trials['reward_all']).cumsum()).cumcount() + 1
+                            (df_trials['rewarded_prev'] != df_trials['reward_all']).cumsum()).cumcount() + 1
 
     # Set 'NA' for mismatched reward types
     df_trials.loc[df_trials['reward_all'] == 0, 'num_reward_past'] = df_trials.loc[df_trials['reward_all'] == 0, 'num_reward_past']* -1 
-
-    # Drop the temporary column
-    df_trials.drop(columns=['reward_shifted'], inplace=True)
 
     ##### PART II: BINNING RPE #######
     # get RPE binned columns. 
@@ -81,7 +78,7 @@ def run_analysis(
 
     df_trials['RPE-binned3'] = pd.cut(df_trials['RPE_earned'],# all versus earned not a huge difference
                         bins = bins, right = True, labels=RPE_binned3_label_names)
-    
+
     ##### PART III: BINNING QCHOSEN #######
     bins = [0.0, 1/3, 2/3, 1.01]
     q_labels = ["Qch 0", "Qch 0.33", "Qch 0.66"]
@@ -108,6 +105,9 @@ def run_analysis(
     _choice_shifted = df_trials.groupby('ses_idx')['choice'].shift(1)
     df_trials['stay'] = df_trials['choice'] == _choice_shifted
     df_trials['switch'] = df_trials['choice'] != _choice_shifted
+    df_trials['response_time'] = df_trials['choice_time_in_trial'] -  df_trials['goCue_start_time_in_trial']
+
+    ############## finished computations for plotting ###############
 
     (df_sess, nwbs_by_week) = analysis_util.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
 
@@ -115,21 +115,21 @@ def run_analysis(
     # TODO: will need to refactor code so there's flexibility on the plots that come out
     #       consult alex? or figure it out on my own. 
     # get average activity 
-    data_column = 'data_z_norm'
-    alignment_event='choice_time_in_session'
-    rpe_slope_dict = {}
-    for channel in list(analysis_specification["channels"].keys()):
-        avg_signal_col = summary_plots.output_col_name(channel, data_column, alignment_event)
-        for nwb_week in nwbs_by_week:
+    # data_column = 'data_z_norm'
+    # alignment_event='choice_time_in_session'
+    # rpe_slope_dict = {}
+    # for channel in list(analysis_specification["channels"].keys()):
+    #     avg_signal_col = summary_plots.output_col_name(channel, data_column, alignment_event)
+    #     for nwb_week in nwbs_by_week:
         
-            nwb_week = trial_metrics.get_average_signal_window_multi(
-                            nwb_week,
-                            alignment_event='choice_time_in_session',
-                            offsets=[0.33, 1],
-                            channel=channel,
-                            data_column=data_column,
-                            output_col = avg_signal_col
-                        )
+    #         nwb_week = trial_metrics.get_average_signal_window_multi(
+    #                         nwb_week,
+    #                         alignment_event='choice_time_in_session',
+    #                         offsets=[0.33, 1],
+    #                         channel=channel,
+    #                         data_column=data_column,
+    #                         output_col = avg_signal_col
+    #                     )
         
     #     # get rpe slope per session 
 
@@ -175,7 +175,7 @@ def run_analysis(
     for channel, channel_loc in parameters['channels'].items():
         if "all_sess" in parameters["plot_types"]:
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
-            summary_plots.plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+            summary_plots.plot_all_sess(df_sess, nwbs_all, loc = plot_loc)
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
         
