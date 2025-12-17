@@ -185,8 +185,8 @@ def run_analysis(
     if "all_sess" in parameters["plot_types"]:
         logger.info("running ALL SESS behavior")
         if len(nwbs_all) > 5:
-            nwb_batches = [nwb_all[i:i+5] for i in range(0, len(nwb_all), 5)]
-            for nwb_batch in nwbs_all:
+            nwb_batches = [nwbs_all[i:i+5] for i in range(0, len(nwbs_all), 5)]
+            for nwb_batch in nwb_batches:
                 summary_plots.plot_all_sess(df_sess, nwbs_batch, loc = plot_loc)
     if "avg_lastN_sess" in parameters["plot_types"]:
         summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, parameters["channels"], final_N_sess = 5, loc = plot_loc)
