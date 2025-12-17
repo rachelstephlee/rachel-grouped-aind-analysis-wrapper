@@ -51,6 +51,9 @@ def run_analysis(
     if docdb_record_exists(processing):
         logger.info("Record already exists, skipping.")
         return
+    
+    if dry_run:
+        logger.info("DRY RUN!!!!!!! ")
 
     (df_sess, df_trials, df_events, df_fip) = r_utils.get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
 
