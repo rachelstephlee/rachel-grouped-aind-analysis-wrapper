@@ -171,17 +171,27 @@ def run_analysis(
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
-    if "avg_lastN_sess" in parameters["plot_types"]:
-        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, parameters["channels"], final_N_sess = 5, loc = plot_loc)
+
     
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
     for channel, channel_loc in parameters['channels'].items():
         if "all_sess" in parameters["plot_types"]:
+            logger.info("running NEURAL PSTH")
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
-            summary_plots.plot_all_sess(df_sess, nwbs_all, loc = plot_loc)
+            
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
-        
+    
+    if "all_sess" in parameters["plot_types"]:
+        logger.info("running ALL SESS behavior")
+        if len(nwbs_all) > 5:
+            nwb_batches = [nwb_all[i:i+5] for i in range(0, len(nwb_all), 5)]
+            for nwb_batch in nwbs_all:
+                summary_plots.plot_all_sess(df_sess, nwbs_batch, loc = plot_loc)
+    if "avg_lastN_sess" in parameters["plot_types"]:
+        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, parameters["channels"], final_N_sess = 5, loc = plot_loc)
+
+
     # # # DRY RUN (comment in or out)
     if not dry_run:
         logger.info("Running analysis and posting results")

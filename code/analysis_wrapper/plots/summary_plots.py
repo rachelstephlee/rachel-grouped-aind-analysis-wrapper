@@ -707,9 +707,11 @@ def set_bar_percentages(ax, df, x_col, hue_col):
 
 def plot_per_sess_behavior_data(nwb, fig, panels):
 
+
+
     title_ax = fig.add_subplot(panels[0, :])
     title_ax.axis('off')
-    title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
+    title_ax.set_title(f"{nwb}", fontsize=14, fontweight='bold')
     # --- First row --- 
     # Top row (full width)
 
@@ -832,6 +834,17 @@ def plot_all_sess(df_sess, nwbs_all,loc=None):
     plot_all_sess the DA version-- 
     plots L/R, split by RPE, baseline, split by RPE after baseline removal, slope for average response. 
     """
+    # set sizese
+    mpl.rcParams.update({
+    "font.size": FONTSIZE - 2,
+    "legend.fontsize": FONTSIZE-2,
+    "axes.titlesize": FONTSIZE - 2,
+    "axes.labelsize": FONTSIZE - 2,
+    "xtick.labelsize": FONTSIZE - 2,
+    "ytick.labelsize": FONTSIZE - 2,
+    "figure.titlesize": FONTSIZE -2
+})
+
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
     mpl.rcParams["axes.spines.right"] = False
@@ -843,7 +856,7 @@ def plot_all_sess(df_sess, nwbs_all,loc=None):
 
 
 
-    fig = plt.figure(figsize=(12, nrows*8), constrained_layout = True)
+    fig = plt.figure(figsize=(8, nrows*6), constrained_layout = True)
 
     outer = GridSpec(nrows, 1, figure=fig)
 
@@ -854,7 +867,7 @@ def plot_all_sess(df_sess, nwbs_all,loc=None):
     for row, nwb in enumerate(nwbs_all):
 
         # create a small title row above the 4 panels using a nested GridSpec
-        inner = GridSpecFromSubplotSpec(4, 5, subplot_spec=outer[row],height_ratios=[0.1, 3, 1, 1], wspace = 0.2, hspace = 0.5)
+        inner = GridSpecFromSubplotSpec(4, 5, subplot_spec=outer[row],height_ratios=[0.1, 3, 1, 1], wspace = 0.2, hspace = 0.6)
         panels = plot_per_sess_behavior_data(nwb, fig, inner)
         axes_rows[row] = panels
 
@@ -864,6 +877,6 @@ def plot_all_sess(df_sess, nwbs_all,loc=None):
 
 
     if loc is not None:
-        plt.savefig(f'{loc}{nwb.session_id.replace("behavior_","")}_behavior.png'
+        plt.savefig(f'{loc}{nwbs_all[0].session_id.replace("behavior_","")}_behavior.png'
                             ,bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
