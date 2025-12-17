@@ -607,64 +607,6 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
         plt.close(fig)
 
 
-def plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc=None):
-    """
-    plot_all_sess the DA version-- 
-    plots L/R, split by RPE, baseline, split by RPE after baseline removal, slope for average response. 
-    """
-    # set pdf plot requirements
-    mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
-
-
-    nrows = len(nwbs_all)
-    ncols = N_COLS_PER_ROW
-    subject_id = df_sess['subject_id'].unique()[0]
-
-
-
-    fig = plt.figure(figsize=(ncols*5, nrows*4))
-    plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize = 16)
-
-    outer = GridSpec(nrows, 1, figure=fig)
-
-    # axes_rows will hold lists of 4 axes for each row; index 0 reserved for the top summary row (unused)
-    axes_rows = [None] * nrows
-
-    # -- Plot one row per session --- 
-    for row, nwb in enumerate(nwbs_all):
-
-        # create a small title row above the 4 panels using a nested GridSpec
-        inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
-        title_ax = fig.add_subplot(inner[0, :])
-        title_ax.axis('off')
-        title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
-
-        # create the n_cols panel axes for this row
-        panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
-
-        panels = plot_row_panels([nwb], channel, panels)
-        axes_rows[row] = panels
-
-
-    # set bottom row xlabels using the last row panels
-    last_panels = axes_rows[-1]
-    if last_panels is not None:
-        last_panels[2].set_xlabel('num_reward_past')
-        last_panels[0].set_xlabel('Time (s) from choice')
-        last_panels[1].set_xlabel('Time (s) from choice')
-        last_panels[-1].set_xlabel('Time (s) from choice')
-
-    # show legends on the first data row (row index 1) if it exists
-    if nrows > 1 and axes_rows[1] is not None:
-        for (col, legend_title) in zip([0, 1, 3], ['choice', 'RPE', 'RPE']):
-            axes_rows[1][col].legend(framealpha=0.5, title = legend_title, fontsize='small')
-
-    plt.tight_layout(rect=[0, 0, 1, 0.97])
-    if loc is not None:
-        plt.savefig(f"{loc}all_sess_{subject_id}_{channel}.png",bbox_inches='tight',transparent = False, dpi = 1000)
-        plt.close()
 
 def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5, loc = None):
     # set pdf plot requirements
@@ -763,29 +705,23 @@ def set_bar_percentages(ax, df, x_col, hue_col):
                 ax.patches[bar_idx].set_height(percent)
                 bar_idx = bar_idx + 1
 
-def plot_per_channel_behavior_data(nwb, loc=None):
-    fig = plt.figure(figsize=(12, 6),constrained_layout=True)
-    # three rows: small legend row, main foraging row, bottom summary row
-    gs = gridspec.GridSpec(3, 5, figure=fig, height_ratios=[3,1, 1])
+def plot_per_sess_behavior_data(nwb, fig, panels):
 
-    if isinstance(nwb,list):
-        session_id_title = ', '.join([nwb_i.session_id for nwb_i in nwb])
-    else:
-        session_id_title = nwb.session_id
-    plt.suptitle(f'{session_id_title}', y = 0.99)
-
-    # --- First row ---
-    # Top row (full width)   
+    title_ax = fig.add_subplot(panels[0, :])
+    title_ax.axis('off')
+    title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
+    # --- First row --- 
+    # Top row (full width)
 
     # Top: foraging session plot
-    big_ax_top = fig.add_subplot(gs[0, :])
+    big_ax_top = fig.add_subplot(panels[1,:])
 
     [_, foraging_session_axes] = pb.plot_foraging_session_nwb(nwb, ax=big_ax_top)
     foraging_session_axes[1].set_xlabel("")
 
 
     # Bottom slice:
-    big_ax_bottom = fig.add_subplot(gs[1, :], sharex=foraging_session_axes[1])
+    big_ax_bottom = fig.add_subplot(panels[2,:],sharex = foraging_session_axes[1])
     big_ax_bottom.plot(nwb.df_trials['Q_sum'], label = 'Q_sum', color = 'green')
     big_ax_bottom.plot(nwb.df_trials['Q_chosen'], label = 'Q_chosen', color = 'magenta')
     big_ax_bottom.legend(fontsize = 'x-small', title = "", bbox_to_anchor=(0.5, 1.05), 
@@ -798,7 +734,7 @@ def plot_per_channel_behavior_data(nwb, loc=None):
 
 
     # ax1: Response time histogram (left 4 columns)
-    ax1 = fig.add_subplot(gs[-1, :3])  
+    ax1 = fig.add_subplot(panels[-1, :3])
     ax1.set_title("Response Time Histogram")
 
     stay_leave_palette = {'False': 'Lime', 'True': 'Green', 
@@ -826,7 +762,7 @@ def plot_per_channel_behavior_data(nwb, loc=None):
 
 
     # ax2: % Stay/Leave (very narrow)
-    ax2 = fig.add_subplot(gs[-1, -2])
+    ax2 = fig.add_subplot(panels[-1,3])
     df_trials_prev_rew = pd.concat([nwb.df_trials, nwb.df_trials.query('rewarded_prev == True')],
                              keys = ['all trials', 'prev rew']).reset_index(level=[0])
     ax2.set_title("% Stay/Leave")
@@ -856,7 +792,7 @@ def plot_per_channel_behavior_data(nwb, loc=None):
 
 
     # ax3: % Stay/Leave | Reward (very narrow)
-    ax3 = fig.add_subplot(gs[-1, -1])
+    ax3 = fig.add_subplot(panels[-1, 4])
     df_trials_rew = pd.concat([nwb.df_trials, nwb.df_trials.query('reward_all == True')],
                              keys = ['all trials', 'rew trials']).reset_index(level=[0])
     ax3.set_title("% Choice")
@@ -888,33 +824,46 @@ def plot_per_channel_behavior_data(nwb, loc=None):
     ax3.set_ylabel("")
     ax3.tick_params(axis='x', labelrotation=45)
     
-    plt.tight_layout(pad = 0, h_pad = 0, w_pad = 1.08)
+    plt.tight_layout()
+   
+
+def plot_all_sess(df_sess, nwbs_all,loc=None):
+    """
+    plot_all_sess the DA version-- 
+    plots L/R, split by RPE, baseline, split by RPE after baseline removal, slope for average response. 
+    """
+    # set pdf plot requirements
+    mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
+    mpl.rcParams["axes.spines.right"] = False
+    mpl.rcParams["axes.spines.top"] = False
+
+
+    nrows = len(nwbs_all)
+    subject_id = df_sess['subject_id'].unique()[0]
+
+
+
+    fig = plt.figure(figsize=(12, nrows*8), constrained_layout = True)
+
+    outer = GridSpec(nrows, 1, figure=fig)
+
+    # axes_rows will hold lists of 4 axes for each row; index 0 reserved for the top summary row (unused)
+    axes_rows = [None] * nrows
+
+    # -- Plot one row per session --- 
+    for row, nwb in enumerate(nwbs_all):
+
+        # create a small title row above the 4 panels using a nested GridSpec
+        inner = GridSpecFromSubplotSpec(4, 5, subplot_spec=outer[row],height_ratios=[0.1, 3, 1, 1], wspace = 0.2, hspace = 0.5)
+        panels = plot_per_sess_behavior_data(nwb, fig, inner)
+        axes_rows[row] = panels
+
+    fig.canvas.draw()
+    fig.subplots_adjust(top=0.92)
+    fig.tight_layout(rect=[0, 0, 1, 0.92], pad=1.08)
+
 
     if loc is not None:
-        plt.savefig(f'{loc}{nwb.session_id.replace("behavior_","")}_behavior.png')
+        plt.savefig(f'{loc}{nwb.session_id.replace("behavior_","")}_behavior.png'
+                            ,bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
-        try:
-            nwb.df_logistic = get_logistic_regression(
-            df_sessions=pd.DataFrame(
-                {
-                    "subject_id": [nwb.session_id.replace('behavior_','').split('_')[0]],
-                    "session_date": [nwb.session_id.replace('behavior_','').split('_')[1]],
-                }
-            ),
-            model="Su2022",
-            if_download_figures=True,  # Also download fitting plots
-            download_path=loc,
-            )
-
-            if nwb.nwb_file_loc is not None:
-                with NWBZarrIO(path=nwb.nwb_file_loc, mode="r") as io:
-                    nwb_actual = io.read()
-                lick_analysis.plot_lick_analysis(nwb_actual)
-            else: 
-                print("no lick analysis plots generated because nwb is not found in data")
-
-
-            plt.savefig(f'{loc}{nwb.session_id.replace("behavior_","")}_lick_analysis.png')
-            plt.close()
-        except Exception as e:
-            print(f"Error in logistic regression or lick analysis plotting: {e}")

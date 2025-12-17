@@ -175,6 +175,7 @@ def run_analysis(
     for channel, channel_loc in parameters['channels'].items():
         if "all_sess" in parameters["plot_types"]:
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+            summary_plots.plot_all_sess(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
         
