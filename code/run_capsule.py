@@ -59,9 +59,7 @@ def run_analysis(
 
     processing.output_parameters = ExampleAnalysisOutputs(
         isi_violations=["example_violation_1", "example_violation_2"],
-        additional_info=(
-            "This is an example of additional information about the analysis."
-        )[0],
+        additional_info="This is an example of additional information about the analysis.",
     )
 
     write_results_and_metadata(processing, ANALYSIS_BUCKET, dry_run=dry_run)
