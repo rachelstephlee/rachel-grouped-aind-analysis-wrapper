@@ -1,23 +1,18 @@
 {
 	"version": 1,
 	"base_image": "codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04",
-	"args": [
-		"AWS_ACCESS_KEY_ID",
-		"AWS_DEFAULT_REGION",
-		"AWS_SECRET_ACCESS_KEY",
-		"CODEOCEAN_API_TOKEN"
-	],
 	"post_install": true,
 	"options": {
 		"registry_host_arg": true,
-		"git_ask_pass": true
+		"git_ask_pass": true,
+		"mount_secrets": true
 	},
 	"installers": {
 		"pip": {
 			"packages": [
 				{
 					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils#egg=analysis-pipeline-utils",
-					"version": "8a69491c67b79e5dcfb84084513ecba33b0160ed"
+					"version": "fffaeb1bc0596c8413ccecfce5f746ba3223c24a"
 				},
 				{
 					"name": "pydantic-settings",
@@ -25,7 +20,7 @@
 				},
 				{
 					"name": "s3fs",
-					"version": "0.4.2"
+					"version": "2025.12.0"
 				}
 			],
 			"options": {},
@@ -51,7 +46,7 @@
 		},
 		{
 			"name": "CODEOCEAN_EMAIL",
-			"value": "YOUR_EMAIL_HERE@alleninstitute.org"
+			"value": "tom.chartrand@alleninstitute.org"
 		},
 		{
 			"name": "ANALYSIS_BUCKET",

@@ -64,13 +64,7 @@ def run_analysis(
         )[0],
     )
 
-    if not dry_run:
-        logger.info("Running analysis and posting results")
-        write_results_and_metadata(processing, ANALYSIS_BUCKET)
-        logger.info("Successfully wrote record to docdb and s3")
-    else:
-        logger.info("Dry run complete. Results not posted")
-
+    write_results_and_metadata(processing, ANALYSIS_BUCKET, dry_run=dry_run)
 
 if __name__ == "__main__":
     logging.basicConfig(
