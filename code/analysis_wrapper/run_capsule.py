@@ -174,6 +174,8 @@ def run_analysis(
     
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
     for channel, channel_loc in parameters['channels'].items():
+        if parameters['preprocessing'] is not 'raw':
+            channel = channel +  '_' + parameters['preprocessing'] 
         if "all_sess" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH")
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
