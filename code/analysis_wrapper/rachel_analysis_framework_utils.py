@@ -1,10 +1,13 @@
 from aind_dynamic_foraging_data_utils import nwb_utils, alignment, enrich_dfs
 
 from aind_dynamic_foraging_data_utils import code_ocean_utils as co_utils
+import warnings
 
 
 def get_nwb_processed(file_locations, **parameters) -> None:
     interested_channels = list(parameters["channels"].keys())
+    if parameters['preprocessing'] is not "raw":
+        interested_channels = [channel + '_' + parameters['preprocessing'] for channel in interested_channels]
     df_sess = nwb_utils.create_df_session(file_locations)
     df_sess['s3_location'] = file_locations
 

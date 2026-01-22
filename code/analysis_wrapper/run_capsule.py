@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from hdmf_zarr import NWBZarrIO
 
-import warnings
 
 
 import sys

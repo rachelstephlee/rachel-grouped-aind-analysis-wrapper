@@ -16,7 +16,7 @@ ENV ANALYSIS_BUCKET=aind-analysis-prod-o5171v/dynamic-foraging-nm
 RUN --mount=type=secret,id=git-access-token \
     GIT_ACCESS_TOKEN="$(cat /run/secrets/git-access-token)" \
     pip install -U --no-cache-dir \
-    aind-analysis-arch-result-access==0.7.4 \
+    aind-analysis-arch-result-access==1.0 \
     awscli==1.38.3 \
     boto3==1.37.3 \
     ipykernel==6.30.0 \

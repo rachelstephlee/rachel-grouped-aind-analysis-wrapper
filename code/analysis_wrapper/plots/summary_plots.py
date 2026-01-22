@@ -403,6 +403,8 @@ def plot_row_panels_PSTH_legends(df_trials_all, panels):
 
     return panels
 
+
+
 def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     """
     Plot a row of summary panels for a given set of NWB sessions and a specific channel.
@@ -535,7 +537,9 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
         panels[idx].set_ylabel("")
     return panels
 
-
+def plot_row_panels_PSTH_multiple_channels(nwbs, channels, panels, legend_panel = False):
+    for channel in channels:
+        plot_row_panels_PSTH(nwbs, channel, panels, legend_panel)
 
 def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
     """
