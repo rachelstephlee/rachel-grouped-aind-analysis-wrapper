@@ -10,7 +10,7 @@ ENV DOCDB_HOST=api.allenneuraldynamics.org
 ENV DOCDB_DATABASE=analysis
 ENV DOCDB_COLLECTION=architecture_example_v2
 ENV CODEOCEAN_DOMAIN=codeocean.allenneuraldynamics.org
-ENV CODEOCEAN_EMAIL=tom.chartrand@alleninstitute.org
+ENV CODEOCEAN_EMAIL=YOUR_EMAIL_HERE@alleninstitute.org
 ENV ANALYSIS_BUCKET=aind-scratch-data/analysis/architecture_example_v2
 
 RUN --mount=type=secret,id=git-access-token \
