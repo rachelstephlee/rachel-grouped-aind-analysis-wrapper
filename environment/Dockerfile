@@ -1,4 +1,4 @@
-# hash:sha256:5699524d4a9bba0145fa8b249dd74761b343a9c335e3251637b7c34cf04a2578
+# hash:sha256:7379a12b21dffbce1c90ec33b388c906ff0d545a6d2a3c7cbde61e8ef1cf1e30
 ARG REGISTRY_HOST
 FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
@@ -17,7 +17,7 @@ RUN --mount=type=secret,id=git-access-token \
     GIT_ACCESS_TOKEN="$(cat /run/secrets/git-access-token)" \
     pip install -U --no-cache-dir \
     pydantic-settings==2.9.1 \
-    s3fs==0.4.2 \
+    s3fs==2025.12.0 \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@272948f5e72c8cae74cedf65db4c933403ab5685#egg=analysis-pipeline-utils
 
 COPY postInstall /
