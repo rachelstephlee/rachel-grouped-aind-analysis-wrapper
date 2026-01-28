@@ -79,7 +79,8 @@ def run_analysis(
     Returns
     -------
     dict | None
-        Any output parameters that will be stored or None if no output model
+        Output parameters matching AnalysisOutputModel, or None if no outputs are produced
+
     """
 
     # Execute analysis and write to results folder
