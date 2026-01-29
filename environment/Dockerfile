@@ -1,4 +1,4 @@
-# hash:sha256:651a023812a39e0e5f9e8608cf220740e1df994e5678f1f59c8ddb184ffa4dfb
+# hash:sha256:3ab1abd16985947969734bbda91a24fdfdf7f8cd8ef8173e569556fd4694438e
 ARG REGISTRY_HOST
 FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=git-access-token \
     boto3==1.42.30 \
     pydantic-settings==2.9.1 \
     s3fs==2026.1.0 \
-    -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@3cd557a40deb107a2bc4c325f7364fdb6722aee5#egg=analysis-pipeline-utils
+    -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@7aa13cff7db5042eb7fac126b421e4a5e95a4e1a#egg=analysis-pipeline-utils
 
 COPY postInstall /
 RUN --mount=type=secret,id=secrets . /run/secrets/secrets \
