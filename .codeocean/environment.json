@@ -16,7 +16,7 @@
 				},
 				{
 					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils#egg=analysis-pipeline-utils",
-					"version": "7aa13cff7db5042eb7fac126b421e4a5e95a4e1a"
+					"version": "0c06e190d659c70203d15811caca72838a654fb4"
 				},
 				{
 					"name": "pydantic-settings",
@@ -30,27 +30,5 @@
 			"options": {},
 			"pre_install_options": {}
 		}
-	},
-	"env_variables": [
-		{
-			"name": "DOCDB_HOST",
-			"value": "api.allenneuraldynamics.org"
-		},
-		{
-			"name": "DOCDB_DATABASE",
-			"value": "analysis"
-		},
-		{
-			"name": "DOCDB_COLLECTION",
-			"value": "architecture_example_v2"
-		},
-		{
-			"name": "CODEOCEAN_DOMAIN",
-			"value": "codeocean.allenneuraldynamics.org"
-		},
-		{
-			"name": "ANALYSIS_BUCKET",
-			"value": "aind-scratch-data/analysis/architecture_example_v2"
-		}
-	]
+	}
 }
