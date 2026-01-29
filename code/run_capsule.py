@@ -8,6 +8,9 @@ from analysis_pipeline_utils.analysis_dispatch_model import \
 
 from analysis_pipeline_utils.utils_analysis_wrapper import (
     run_analysis_jobs)
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ======================================================================
 # USER MUST EDIT THIS SECTION
@@ -23,7 +26,7 @@ This is an example of an analysis-specific schema
 for the parameters required by that analysis
 """
 
-class ExampleAnalysisSpecification(GenericModel):
+class ExampleAnalysisParameters(GenericModel):
     """
     Represents the specification for an analysis, including its name,
     version, libraries to track, and parameters.
@@ -56,32 +59,15 @@ class ExampleAnalysisOutputs(GenericModel):
         default=None, description="Additional information about the analysis"
     )
 
-AnalysisSpecification = ExampleAnalysisSpecification
+AnalysisInputModel = ExampleAnalysisParameters
 AnalysisOutputModel = ExampleAnalysisOutputs
 
 
 ### USER EDITABLE FUNCTION WHERE ANALYSIS IS EXECUTED
 def run_analysis(
     analysis_dispatch_inputs: AnalysisDispatchModel,
-    analysis_specification: AnalysisSpecification
+    analysis_parameters: AnalysisInputModel
 ) -> dict | None:
-    """
-    Runs the analysis
-
-    Parameters
-    ----------
-    analysis_dispatch_inputs: AnalysisDispatchModel
-        The input model from the dispatcher
-    
-    analysis_specification: AnalysisSpecification
-        The user specified analysis parameters model
-
-    Returns
-    -------
-    dict | None
-        Output parameters matching AnalysisOutputModel, or None if no outputs are produced
-
-    """
 
     # Execute analysis and write to results folder
     # using the passed parameters
@@ -106,7 +92,7 @@ def run_analysis(
 
 if __name__ == "__main__":
     run_analysis_jobs(
-        analysis_input_model=AnalysisSpecification,
+        analysis_input_model=AnalysisInputModel,
         analysis_output_model=AnalysisOutputModel,
         run_function=run_analysis
     )

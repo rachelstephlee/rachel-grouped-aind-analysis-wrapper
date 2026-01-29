@@ -11,8 +11,12 @@
 		"pip": {
 			"packages": [
 				{
+					"name": "boto3",
+					"version": "1.42.30"
+				},
+				{
 					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils#egg=analysis-pipeline-utils",
-					"version": "272948f5e72c8cae74cedf65db4c933403ab5685"
+					"version": "27bac72c93d35fbf37c20b3de06fb4cec0b4ff57"
 				},
 				{
 					"name": "pydantic-settings",
@@ -20,7 +24,7 @@
 				},
 				{
 					"name": "s3fs",
-					"version": "2025.12.0"
+					"version": "2026.1.0"
 				}
 			],
 			"options": {},
@@ -43,10 +47,6 @@
 		{
 			"name": "CODEOCEAN_DOMAIN",
 			"value": "codeocean.allenneuraldynamics.org"
-		},
-		{
-			"name": "CODEOCEAN_EMAIL",
-			"value": "YOUR_EMAIL_HERE@alleninstitute.org"
 		},
 		{
 			"name": "ANALYSIS_BUCKET",
