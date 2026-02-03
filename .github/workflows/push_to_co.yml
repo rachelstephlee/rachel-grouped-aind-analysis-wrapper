@@ -1,7 +1,7 @@
 name: Push to GitHub
 
 env:
-  USERNAME: neural.dynamics%40alleninstitute.org
+  USERNAME: tom.chartrand%40alleninstitute.org
   REPO: codeocean.allenneuraldynamics.org/capsule-6431118.git
 on:
   push:
