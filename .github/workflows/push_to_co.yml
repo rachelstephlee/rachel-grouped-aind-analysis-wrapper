@@ -3,8 +3,8 @@ name: Push to CodeOcean and run
 env:
   USERNAME: tom.chartrand%40alleninstitute.org
   DOMAIN: codeocean.allenneuraldynamics.org
-  SLUG: 6431118
-  CAPSULE_ID: 484fa730-f816-44db-9484-8918470ae777
+  SLUG: 9197814
+  CAPSULE_ID: 557c8852-8f8d-4aa2-a9ed-0b31fe86cc7c
 
 on:
   push:
