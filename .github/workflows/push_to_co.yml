@@ -1,8 +1,11 @@
-name: Push to GitHub
+name: Push to CodeOcean
 
 env:
   USERNAME: tom.chartrand%40alleninstitute.org
-  REPO: codeocean.allenneuraldynamics.org/capsule-6431118.git
+  DOMAIN: codeocean.allenneuraldynamics.org
+  SLUG: 6431118
+  CAPSULE_ID: 484fa730-f816-44db-9484-8918470ae777
+
 on:
   push:
     branches:
@@ -19,4 +22,15 @@ jobs:
       - name: Push changes
         env:
           CO_CAPSULE_RW_TOKEN: ${{ secrets.CO_CAPSULE_RW_TOKEN }}
-        run: git push https://${{ env.USERNAME }}:${CO_CAPSULE_RW_TOKEN}@${{ env.REPO }} main
+        run: git push https://${{ env.USERNAME }}:${{ env.CO_CAPSULE_RW_TOKEN }}@${{ env.DOMAIN }}/capsule-${{ env.SLUG }}.git main
+
+      - name: Run capsule
+        env:
+          CO_CAPSULE_RW_TOKEN: ${{ secrets.CO_CAPSULE_RW_TOKEN }}
+        run: |
+          curl -X POST https://${{ env.DOMAIN }}/api/v1/computations \
+          -u "{{ secrets.CO_CAPSULE_RW_TOKEN}}": \
+          -H "Content-Type: application/json" \
+          --data-raw '{
+            "capsule_id": "${{ env.CAPSULE_ID }}"
+          }'
