@@ -1,7 +1,7 @@
 name: Push to GitHub
 
 env:
-  USERNAME: neural.dynamics@alleninstitute.org
+  USERNAME: neural.dynamics%40alleninstitute.org
   REPO: codeocean.allenneuraldynamics.org/capsule-6431118.git
 on:
   push:
@@ -19,4 +19,4 @@ jobs:
       - name: Push changes
         env:
           CO_CAPSULE_RW_TOKEN: ${{ secrets.CO_CAPSULE_RW_TOKEN }}
-        run: git push https://$USERNAME:${CO_CAPSULE_RW_TOKEN}@${REPO} main
+        run: git push https://${USERNAME}:${CO_CAPSULE_RW_TOKEN}@${REPO} main
