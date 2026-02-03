@@ -23,7 +23,7 @@ jobs:
         env:
           CO_CAPSULE_RW_TOKEN: ${{ secrets.CO_CAPSULE_RW_TOKEN }}
         run: git push https://${{ env.USERNAME }}:${{ env.CO_CAPSULE_RW_TOKEN }}@${{ env.DOMAIN }}/capsule-${{ env.SLUG }}.git main
-
+        
       - name: Run capsule
         env:
           CO_CAPSULE_RW_TOKEN: ${{ secrets.CO_CAPSULE_RW_TOKEN }}
