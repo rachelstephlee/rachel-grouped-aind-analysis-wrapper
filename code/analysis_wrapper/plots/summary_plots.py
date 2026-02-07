@@ -103,7 +103,7 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
 
 
 
-def plot_row_panels(nwbs, channel, panels):
+def plot_row_panels_RPE(nwbs, channel, panels):
     """
     Plot a row of summary panels for a given set of NWB sessions and a specific channel.
 
@@ -180,7 +180,7 @@ def plot_row_panels(nwbs, channel, panels):
                 color=sns.color_palette('vlag', len(agg)),
                 capsize=4,
         )
-        panels[2].set_ylabel(f'data_z_{channel}_baseline')
+        panels[2].set_ylabel(f'data_z_baseline')
     else:
         sns.barplot(
                 x='num_reward_past',
@@ -304,7 +304,7 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels(nwbs, channel, panels)
+        panels = plot_row_panels_RPE(nwbs, channel, panels)
         axes_rows[row] = panels
 
 
@@ -513,7 +513,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
                 color=sns.color_palette('vlag', len(agg)),
                 capsize=4,
         )
-        panels[4].set_ylabel(f'data_z_{channel}_baseline')
+        panels[4].set_ylabel(f'data_z_baseline')
     else:
         sns.barplot(
                 x='num_reward_past',
@@ -656,7 +656,7 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5,
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels(nwbs, channel, panels)
+        panels = plot_row_panels_RPE(nwbs, channel, panels)
         axes_rows[row] = panels
 
 
@@ -710,8 +710,6 @@ def set_bar_percentages(ax, df, x_col, hue_col):
                 bar_idx = bar_idx + 1
 
 def plot_per_sess_behavior_data(nwb, fig, panels):
-
-
 
     title_ax = fig.add_subplot(panels[0, :])
     title_ax.axis('off')
@@ -833,22 +831,7 @@ def plot_per_sess_behavior_data(nwb, fig, panels):
     plt.tight_layout()
    
 
-def plot_all_sess(df_sess, nwbs_all,loc=None):
-    """
-    plot_all_sess the DA version-- 
-    plots L/R, split by RPE, baseline, split by RPE after baseline removal, slope for average response. 
-    """
-    # set sizese
-    mpl.rcParams.update({
-    "font.size": FONTSIZE - 2,
-    "legend.fontsize": FONTSIZE-2,
-    "axes.titlesize": FONTSIZE - 2,
-    "axes.labelsize": FONTSIZE - 2,
-    "xtick.labelsize": FONTSIZE - 2,
-    "ytick.labelsize": FONTSIZE - 2,
-    "figure.titlesize": FONTSIZE -2
-})
-
+def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
     mpl.rcParams["axes.spines.right"] = False
@@ -856,11 +839,13 @@ def plot_all_sess(df_sess, nwbs_all,loc=None):
 
 
     nrows = len(nwbs_all)
+    ncols = N_COLS_PER_ROW
     subject_id = df_sess['subject_id'].unique()[0]
 
 
 
-    fig = plt.figure(figsize=(8, nrows*6), constrained_layout = True)
+    fig = plt.figure(figsize=(ncols*5, nrows*4))
+    plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize = 16)
 
     outer = GridSpec(nrows, 1, figure=fig)
 
@@ -871,16 +856,32 @@ def plot_all_sess(df_sess, nwbs_all,loc=None):
     for row, nwb in enumerate(nwbs_all):
 
         # create a small title row above the 4 panels using a nested GridSpec
-        inner = GridSpecFromSubplotSpec(4, 5, subplot_spec=outer[row],height_ratios=[0.1, 3, 1, 1], wspace = 0.2, hspace = 0.6)
-        panels = plot_per_sess_behavior_data(nwb, fig, inner)
+        inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
+        title_ax = fig.add_subplot(inner[0, :])
+        title_ax.axis('off')
+        title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
+
+        # create the n_cols panel axes for this row
+        panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
+
+        panels = plot_row_panels_RPE([nwb], channel, panels)
         axes_rows[row] = panels
 
-    fig.canvas.draw()
-    fig.subplots_adjust(top=0.92)
-    fig.tight_layout(rect=[0, 0, 1, 0.92], pad=1.08)
 
+    # set bottom row xlabels using the last row panels
+    last_panels = axes_rows[-1]
+    if last_panels is not None:
+        last_panels[2].set_xlabel('num_reward_past')
+        last_panels[0].set_xlabel('Time (s) from choice')
+        last_panels[1].set_xlabel('Time (s) from choice')
+        last_panels[-1].set_xlabel('Time (s) from choice')
 
+    # show legends on the first data row (row index 1) if it exists
+    if nrows > 1 and axes_rows[1] is not None:
+        for (col, legend_title) in zip([0, 1, 3], ['choice', 'RPE', 'RPE']):
+            axes_rows[1][col].legend(framealpha=0.5, title = legend_title, fontsize='small')
+
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f'{loc}{nwbs_all[0].session_id.replace("behavior_","")}_behavior.png'
-                            ,bbox_inches='tight',transparent = False, dpi = 1000)
+        plt.savefig(f"{loc}all_sess_RPE_{subject_id}_{channel}_{channel_loc}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
         plt.close()

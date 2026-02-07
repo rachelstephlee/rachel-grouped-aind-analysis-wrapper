@@ -117,48 +117,51 @@ def run_analysis(
     # TODO: will need to refactor code so there's flexibility on the plots that come out
     #       consult alex? or figure it out on my own. 
     # get average activity 
-    # data_column = 'data_z_norm'
-    # alignment_event='choice_time_in_session'
-    # rpe_slope_dict = {}
-    # for channel in list(analysis_specification["channels"].keys()):
-    #     avg_signal_col = summary_plots.output_col_name(channel, data_column, alignment_event)
-    #     for nwb_week in nwbs_by_week:
-        
-    #         nwb_week = trial_metrics.get_average_signal_window_multi(
-    #                         nwb_week,
-    #                         alignment_event='choice_time_in_session',
-    #                         offsets=[0.33, 1],
-    #                         channel=channel,
-    #                         data_column=data_column,
-    #                         output_col = avg_signal_col
-    #                     )
-        
-    #     # get rpe slope per session 
+    data_column = 'data_z_norm'
+    alignment_event='choice_time_in_session'
+    rpe_slope_dict = {}
+    for channel in list(parameters["channels"].keys()):
+        if parameters['preprocessing'] is not 'raw':
+            channel = channel +  '_' + parameters['preprocessing'] 
 
-    #     df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week for nwb in nwb_week])
-    #     rpe_slope = []
-    #     for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
+        avg_signal_col = summary_plots.output_col_name(channel, data_column, alignment_event)
+        for nwb_week in nwbs_by_week:
+        
+            nwb_week = trial_metrics.get_average_signal_window_multi(
+                            nwb_week,
+                            alignment_event='choice_time_in_session',
+                            offsets=[0.33, 1],
+                            channel=channel,
+                            data_column=data_column,
+                            output_col = avg_signal_col
+                        )
+        
+        # get rpe slope per session 
+
+        df_trials_all = pd.concat([nwb.df_trials for nwb_week in nwbs_by_week for nwb in nwb_week])
+        rpe_slope = []
+        for ses_idx in sorted(df_trials_all['ses_idx'].unique()):
             
-    #         data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]
-    #         data = data.dropna(subset = [avg_signal_col, 'RPE_earned'])
-    #         if len(data) == 0:
-    #             continue
-    #         data_neg = data[data['RPE_earned'] < 0]
-    #         data_pos = data[data['RPE_earned'] >= 0]
+            data = df_trials_all[df_trials_all['ses_idx'] == ses_idx]
+            data = data.dropna(subset = [avg_signal_col, 'RPE_earned'])
+            if len(data) == 0:
+                continue
+            data_neg = data[data['RPE_earned'] < 0]
+            data_pos = data[data['RPE_earned'] >= 0]
 
-    #         ses_date = pd.to_datetime(ses_idx.split('_')[1])
-    #         (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
-    #         (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
-    #         rpe_slope.append([ses_date, slope_pos, slope_neg])
-    #     rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
-    #     rpe_slope_dict[channel] = rpe_slope
+            ses_date = pd.to_datetime(ses_idx.split('_')[1])
+            (_,_, slope_pos) = summary_plots.get_RPE_by_avg_signal_fit(data_pos, avg_signal_col)
+            (_,_, slope_neg) = summary_plots.get_RPE_by_avg_signal_fit(data_neg, avg_signal_col)
+            rpe_slope.append([ses_date, slope_pos, slope_neg])
+        rpe_slope = pd.DataFrame(rpe_slope, columns=['date', 'slope (RPE >= 0)', 'slope (RPE < 0)'])
+        rpe_slope_dict[channel] = rpe_slope
 
-    # subject_id = df_sess['subject_id'].unique()[0]
-    # # Concatenate with keys, turning dict keys into an index
-    # combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
-    # combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
+    subject_id = df_sess['subject_id'].unique()[0]
+    # Concatenate with keys, turning dict keys into an index
+    combined_rpe_slope = pd.concat(rpe_slope_dict, names=["channel"])
+    combined_rpe_slope = combined_rpe_slope.reset_index(level="channel").reset_index(drop=True)
 
-    # combined_rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
+    combined_rpe_slope.to_csv(f"/results/{subject_id}_rpe_slope.csv")
 
 
     # plot summary plots
@@ -179,6 +182,10 @@ def run_analysis(
         if "all_sess" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH")
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+
+        if "all_sess_RPE" in parameters["plot_types"]:
+            logger.info("running NEURAL PSTH with RPE focus")
+            summary_plots.plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
             
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
