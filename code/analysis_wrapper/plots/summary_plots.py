@@ -885,3 +885,54 @@ def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
     if loc is not None:
         plt.savefig(f"{loc}all_sess_RPE_{subject_id}_{channel}_{channel_loc}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
         plt.close()
+def plot_all_sess_behavior(df_sess, nwbs_all,loc=None):
+    """
+    plot_all_sess the DA version-- 
+    plots L/R, split by RPE, baseline, split by RPE after baseline removal, slope for average response. 
+    """
+    # set sizese
+    mpl.rcParams.update({
+    "font.size": FONTSIZE - 2,
+    "legend.fontsize": FONTSIZE-2,
+    "axes.titlesize": FONTSIZE - 2,
+    "axes.labelsize": FONTSIZE - 2,
+    "xtick.labelsize": FONTSIZE - 2,
+    "ytick.labelsize": FONTSIZE - 2,
+    "figure.titlesize": FONTSIZE -2
+})
+
+    # set pdf plot requirements
+    mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
+    mpl.rcParams["axes.spines.right"] = False
+    mpl.rcParams["axes.spines.top"] = False
+
+
+    nrows = len(nwbs_all)
+    subject_id = df_sess['subject_id'].unique()[0]
+
+
+
+    fig = plt.figure(figsize=(8, nrows*6), constrained_layout = True)
+
+    outer = GridSpec(nrows, 1, figure=fig)
+
+    # axes_rows will hold lists of 4 axes for each row; index 0 reserved for the top summary row (unused)
+    axes_rows = [None] * nrows
+
+    # -- Plot one row per session --- 
+    for row, nwb in enumerate(nwbs_all):
+
+        # create a small title row above the 4 panels using a nested GridSpec
+        inner = GridSpecFromSubplotSpec(4, 5, subplot_spec=outer[row],height_ratios=[0.1, 3, 1, 1], wspace = 0.2, hspace = 0.6)
+        panels = plot_per_sess_behavior_data(nwb, fig, inner)
+        axes_rows[row] = panels
+
+    fig.canvas.draw()
+    fig.subplots_adjust(top=0.92)
+    fig.tight_layout(rect=[0, 0, 1, 0.92], pad=1.08)
+
+
+    if loc is not None:
+        plt.savefig(f'{loc}{nwbs_all[0].session_id.replace("behavior_","")}_behavior.png'
+                            ,bbox_inches='tight',transparent = False, dpi = 1000)
+        plt.close()
