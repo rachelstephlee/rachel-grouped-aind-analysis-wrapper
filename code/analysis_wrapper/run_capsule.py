@@ -190,7 +190,7 @@ def run_analysis(
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
     
-    if "all_sess" in parameters["plot_types"]:
+    if "behavior" in parameters["plot_types"]:
         logger.info("running ALL SESS behavior")
         if len(nwbs_all) > 5:
             nwb_batches = [nwbs_all[i:i+5] for i in range(0, len(nwbs_all), 5)]
