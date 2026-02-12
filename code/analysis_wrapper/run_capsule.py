@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from hdmf_zarr import NWBZarrIO
 
 
 
@@ -20,16 +19,11 @@ from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchMode
 from analysis_wrapper.analysis_model import (
     SummaryPlotsAnalysisSpecification, SummaryPlotsAnalysisSpecificationCLI
 )
-import subprocess
+
 from rachel_analysis_utils import nwb_utils as r_utils
 from rachel_analysis_utils import analysis_utils as analysis_utils
-
-
-# for analysis code
-import numpy as np
-import pandas as pd 
 from analysis_wrapper.plots import summary_plots
-from aind_dynamic_foraging_basic_analysis.metrics import trial_metrics
+
 
 
 DATA_PATH: Path = Path("/data")  # TODO: don't hardcode
