@@ -88,7 +88,7 @@ def run_analysis(
             logger.info("running NEURAL PSTH")
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
 
-        if "RPE" in parameters["plot_types"]:
+        if "rpe" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH with RPE focus")
             summary_plots.plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
             
