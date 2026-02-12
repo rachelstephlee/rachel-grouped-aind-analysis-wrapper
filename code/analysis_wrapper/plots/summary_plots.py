@@ -4,6 +4,7 @@ import seaborn as sns
 from aind_dynamic_foraging_basic_analysis.plot import plot_fip as pf
 from aind_dynamic_foraging_basic_analysis.plot import plot_foraging_session as pb
 from aind_dynamic_foraging_basic_analysis.plot import plot_session_scroller as pss
+import rachel_analysis_utils.analysis_utils as analysis_utils
 
 import matplotlib.gridspec as gridspec
 
@@ -33,23 +34,6 @@ mpl.rcParams.update({
 
 
 
-def get_RPE_by_avg_signal_fit(data, avg_signal_col):
-
-
-    x = data['RPE_earned'].values
-    y = data[avg_signal_col].values
-    try:
-        lr = stats.linregress(x, y)
-        x_fit = np.linspace(x.min(), x.max(), 100)
-        y_fit = lr.intercept + lr.slope * x_fit
-        slope = lr.slope
-    except ValueError as e:
-        print(f"Error in linear regression: {e}")
-        x_fit = np.nan * np.arange(100)
-        y_fit = np.nan * np.arange(100)
-        slope = np.nan
-    return (x_fit, y_fit, slope)
-
 def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
 
     # clean data, split df_trials
@@ -75,7 +59,7 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
             legend=False,
             ax = ax
         )
-        (x_fit, y_fit, slope) = get_RPE_by_avg_signal_fit(df_trials_neg, avg_signal_col)
+        (x_fit, y_fit, slope) = analysis_utils.get_RPE_by_avg_signal_fit(df_trials_neg, avg_signal_col)
         ax.plot(x_fit, y_fit, color='blue', lw=2, label=f'RPE < 0: {slope:.3f}')
 
 
@@ -93,7 +77,7 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
             legend=False,
             ax = ax
         )
-        (x_fit, y_fit, slope) = get_RPE_by_avg_signal_fit(df_trials_pos, avg_signal_col)
+        (x_fit, y_fit, slope) = analysis_utils.get_RPE_by_avg_signal_fit(df_trials_pos, avg_signal_col)
         ax.plot(x_fit, y_fit, color='red', lw=2, label=f'RPE >= 0: {slope:.3f}')
     ax.set_xlabel('RPE_earned')
     ax.set_ylabel(avg_signal_col)

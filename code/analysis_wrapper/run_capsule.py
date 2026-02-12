@@ -21,7 +21,7 @@ from analysis_wrapper.analysis_model import (
 )
 
 from rachel_analysis_utils import nwb_utils as r_utils
-from rachel_analysis_utils import analysis_utils as analysis_utils
+from rachel_analysis_utils import analysis_utils
 from analysis_wrapper.plots import summary_plots
 
 
