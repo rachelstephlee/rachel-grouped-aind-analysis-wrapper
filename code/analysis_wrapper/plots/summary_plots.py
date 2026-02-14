@@ -17,7 +17,6 @@ import seaborn as sns
 from scipy import stats
 
 
-output_col_name = lambda channel, data_column, alignment_event: f"avg_{data_column}_{channel[:3]}_{alignment_event.split("_in_")[0]}"
 
 
 N_COLS_PER_ROW = 5
@@ -111,8 +110,10 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     RPE_binned3_label_names = df_trials_all['RPE-binned3'].cat.categories.astype(str).tolist()
     if len(nwbs) > 1:
         error_type = 'sem_over_sessions'
+        data_col = 'data_z'
     else:
         error_type = 'sem'
+        data_col = 'data'
     
     # 1. Choice L vs R
     pf.plot_fip_psth_compare_alignments(
@@ -122,7 +123,7 @@ def plot_row_panels_RPE(nwbs, channel, panels):
             channel,
             tw=trial_width_choice,
             extra_colors={"left": 'b', "right": 'r'},
-            data_column="data_z",
+            data_column=data_col,
             error_type=error_type,
             ax=panels[0],
         )
@@ -137,7 +138,7 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     pf.plot_fip_psth_compare_alignments(
             nwbs, RPE_binned3_dfs_dicts, channel,
             extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
-            tw=trial_width_choice, censor=True, data_column="data_z", error_type=error_type, ax=panels[1]
+            tw=trial_width_choice, censor=True, data_column=data_col, error_type=error_type, ax=panels[1]
         )
 
     # 3. Baseline by num_reward_past (grand mean/SE)
@@ -147,13 +148,13 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     if len(nwbs) > 1:
         grouped = (
                 df_trials_all
-                .groupby(['ses_idx', 'num_reward_past'])[f'data_z_{channel}_baseline']
+                .groupby(['ses_idx', 'num_reward_past'])[f'{data_col}_{channel}_baseline']
                 .mean()
                 .reset_index()
             )
         agg = (
                 grouped
-                .groupby('num_reward_past')[f'data_z_{channel}_baseline']
+                .groupby('num_reward_past')[f'{data_col}_{channel}_baseline']
                 .agg(['mean', 'sem'])
                 .reset_index()
             )
@@ -164,11 +165,11 @@ def plot_row_panels_RPE(nwbs, channel, panels):
                 color=sns.color_palette('vlag', len(agg)),
                 capsize=4,
         )
-        panels[2].set_ylabel(f'data_z_baseline')
+        panels[2].set_ylabel(f'{data_col}_baseline')
     else:
         sns.barplot(
                 x='num_reward_past',
-                y=f'data_z_{channel}_baseline',
+                y=f'{data_col}_{channel}_baseline',
                 data=df_trials_all,
                 palette='vlag',
                 hue='num_reward_past',
@@ -183,12 +184,11 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     pf.plot_fip_psth_compare_alignments(
             nwbs, RPE_binned3_dfs_dicts, channel,
             extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
-            tw=trial_width_choice, censor=True, data_column="data_z_norm", error_type=error_type, ax=panels[3]
+            tw=trial_width_choice, censor=True, data_column=f"{data_col}_norm", error_type=error_type, ax=panels[3]
         )
     panels[3].set_ylabel('z-scored df/f \n (baseline removed)')
 
-    # 5. Add the RPE vs avg signal 
-    df_trials_all = pd.concat([nwb.df_trials for nwb in nwbs])
+    # 5. Add the RPE vs avg signal
     avg_signal_cols = [c for c in df_trials_all.columns if c.startswith("avg_data") and channel[:3] in c]
 
     if len(avg_signal_cols) != 1:
@@ -418,8 +418,10 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     
     if len(nwbs) > 1:
         error_type = 'sem_over_sessions'
+        data_col = 'data_z'
     else:
         error_type = 'sem'
+        data_col = 'data'
     
     # 1. Choice L vs R
     pf.plot_fip_psth_compare_alignments(
@@ -430,7 +432,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
             channel,
             tw=trial_width_choice,
             extra_colors={"left": 'b', "right": 'r', "ignore":"purple"},
-            data_column="data_z",
+            data_column=data_col,
             error_type=error_type,
             ax=panels[0],
         )
@@ -443,7 +445,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
             channel,
             tw=trial_width_choice,
             extra_colors={"rew": 'magenta', "no-rew": 'grey'},
-            data_column="data_z",
+            data_column=data_col,
             error_type=error_type,
             ax=panels[1],
         )
@@ -459,7 +461,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     pf.plot_fip_psth_compare_alignments(
             nwbs, RPE_binned3_dfs_dicts, channel,
             extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
-            tw=trial_width_choice, censor=True, data_column="data_z", error_type=error_type, ax=panels[2]
+            tw=trial_width_choice, censor=True, data_column=data_col, error_type=error_type, ax=panels[2]
         )
     
     # 4 Q_val binned3
@@ -468,7 +470,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     pf.plot_fip_psth_compare_alignments(
             nwbs, Qch_binned3_dfs_dicts, channel,
             extra_colors=dict(zip(Qch_binned3_label_names, sns.color_palette("vlag", len(Qch_binned3_label_names)).as_hex())),
-            tw=trial_width_choice, censor=True, data_column="data_z", error_type=error_type, ax=panels[3]
+            tw=trial_width_choice, censor=True, data_column=data_col, error_type=error_type, ax=panels[3]
         )
 
 
@@ -480,13 +482,13 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     if len(nwbs) > 1:
         grouped = (
                 df_trials_all
-                .groupby(['ses_idx', 'num_reward_past'])[f'data_z_{channel}_baseline']
+                .groupby(['ses_idx', 'num_reward_past'])[f'{data_col}_{channel}_baseline']
                 .mean()
                 .reset_index()
             )
         agg = (
                 grouped
-                .groupby('num_reward_past')[f'data_z_{channel}_baseline']
+                .groupby('num_reward_past')[f'{data_col}_{channel}_baseline']
                 .agg(['mean', 'sem'])
                 .reset_index()
             )
@@ -497,11 +499,11 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
                 color=sns.color_palette('vlag', len(agg)),
                 capsize=4,
         )
-        panels[4].set_ylabel(f'data_z_baseline')
+        panels[4].set_ylabel(f'{data_col}_baseline')
     else:
         sns.barplot(
                 x='num_reward_past',
-                y=f'data_z_{channel}_baseline',
+                y=f'{data_col}_{channel}_baseline',
                 data=df_trials_all,
                 palette='vlag',
                 hue='num_reward_past',
