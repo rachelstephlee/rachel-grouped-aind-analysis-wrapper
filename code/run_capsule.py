@@ -3,6 +3,9 @@ from typing import List, Optional, Union
 
 from aind_data_schema.base import GenericModel
 
+from analysis_pipeline_utils.metadata import \
+    get_metadata_for_records
+
 from analysis_pipeline_utils.analysis_dispatch_model import \
     AnalysisDispatchModel
 
@@ -72,6 +75,11 @@ def run_analysis(
 
     # Execute analysis and write to results folder
     # using the passed parameters
+    # Example of fetching metadata record from the dispatcher model:
+    # Returns a list of records where each record is a dictionary with the metadata. Example below:
+    #     metadata_records = get_metadata_for_records(analysis_dispatch_inputs)
+    #     first_record = metadata_records[0]
+    #     data_description = first_record["data_description"]
     # Example:
     # Use NWBZarrIO to reads
     # for location in analysis_dispatch_inputs.file_location:
@@ -80,6 +88,7 @@ def run_analysis(
     #     run_your_analysis(nwbfile, analysis_specification)
     # OR
     #     subprocess.run(["--param_1": analysis_specification.param_1])
+    
 
     ### RETURN DICTIONARY MODEL OF OUTPUT PARAMETERS
     output_parameters = {
