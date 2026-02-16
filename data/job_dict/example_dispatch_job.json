@@ -1,0 +1,36 @@
+{
+    "s3_location": [
+        "s3://codeocean-s3datasetsbucket-1u41qdg42ur9/8351747a-f472-43f9-a53b-cd1f9aa35288"
+    ],
+    "docdb_record_id": [
+        "dfb3a13e-ed0b-48bc-8ede-d68da8f3fb8b"
+    ],
+    "file_location": null,
+    "distributed_parameters": {
+            "isi_violations_cutoff": 0.05
+    },
+    "group_metadata": null,
+    "query": "{\"subject.subject_id\": \"820117\", \"data_description.data_level\": \"derived\", \"data_description.modality.abbreviation\": \"behavior\"}",
+    "analysis_code": {
+        "object_type": "Code",
+        "url": "https://codeocean.allenneuraldynamics.org/capsule/4544861",
+        "name": null,
+        "version": "ad6db0dca9e5fffc1544686c01f39aac1e46c841",
+        "container": null,
+        "run_script": "code/run",
+        "language": null,
+        "language_version": null,
+        "input_data": [
+            {
+                "object_type": "Data asset",
+                "url": "s3://codeocean-s3datasetsbucket-1u41qdg42ur9/8351747a-f472-43f9-a53b-cd1f9aa35288"
+            }
+        ],
+        "parameters": {
+            "analysis_name": "Unit Filtering",
+            "analysis_tag": "V1",
+            "isi_violations_cutoff": 0.8
+        },
+        "core_dependency": null
+    }
+}

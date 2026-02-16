@@ -11,8 +11,12 @@
 		"pip": {
 			"packages": [
 				{
+					"name": "boto3",
+					"version": "1.42.30"
+				},
+				{
 					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils#egg=analysis-pipeline-utils",
-					"version": "fffaeb1bc0596c8413ccecfce5f746ba3223c24a"
+					"version": "a6d93d2878bc30e1d370f0078f2f04bced1216f1"
 				},
 				{
 					"name": "pydantic-settings",
@@ -20,37 +24,11 @@
 				},
 				{
 					"name": "s3fs",
-					"version": "2025.12.0"
+					"version": "2026.1.0"
 				}
 			],
 			"options": {},
 			"pre_install_options": {}
 		}
-	},
-	"env_variables": [
-		{
-			"name": "DOCDB_HOST",
-			"value": "api.allenneuraldynamics.org"
-		},
-		{
-			"name": "DOCDB_DATABASE",
-			"value": "analysis"
-		},
-		{
-			"name": "DOCDB_COLLECTION",
-			"value": "architecture_example_v2"
-		},
-		{
-			"name": "CODEOCEAN_DOMAIN",
-			"value": "codeocean.allenneuraldynamics.org"
-		},
-		{
-			"name": "CODEOCEAN_EMAIL",
-			"value": "tom.chartrand@alleninstitute.org"
-		},
-		{
-			"name": "ANALYSIS_BUCKET",
-			"value": "aind-scratch-data/analysis/architecture_example_v2"
-		}
-	]
+	}
 }
