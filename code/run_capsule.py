@@ -10,7 +10,8 @@ from analysis_pipeline_utils.utils_analysis_wrapper import (
     run_analysis_jobs)
 from dotenv import load_dotenv
 
-load_dotenv()
+# TODO: use pydantic settings instead
+load_dotenv("settings.env")
 
 # ======================================================================
 # USER MUST EDIT THIS SECTION
