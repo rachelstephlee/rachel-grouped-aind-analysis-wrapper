@@ -287,7 +287,7 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
     subject_id = df_sess['subject_id'].unique()[0]
 
     # use constrained_layout to avoid tight_layout warnings with complex nested axes
-    fig = plt.figure(figsize=(ncols * 5, nrows*5), constrained_layout=True)
+    fig = plt.figure(figsize=(ncols * 5, nrows*4), constrained_layout=True)
     
     plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
 
