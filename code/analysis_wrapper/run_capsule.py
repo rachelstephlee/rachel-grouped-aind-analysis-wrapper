@@ -79,7 +79,7 @@ def run_analysis(
 
 
     for channel, channel_loc in parameters['channels'].items():
-        if parameters['preprocessing'] is not 'raw':
+        if parameters['preprocessing'] != 'raw':
             channel = channel +  '_' + parameters['preprocessing'] 
         
         if "all_sess" in parameters["plot_types"]:
