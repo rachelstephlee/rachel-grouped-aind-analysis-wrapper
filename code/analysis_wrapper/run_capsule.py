@@ -58,8 +58,10 @@ def run_analysis(
 
     (df_sess, nwbs_by_week) = r_utils.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
 
-    if "RPE" in parameters["plot_types"]:
-        (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, parameters)
+    if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"]:
+        offsets = [0.33,1]
+        (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, parameters, 
+                                                data_column = "data_norm", offsets = offsets)
 
 
     # plot summary plots
@@ -73,6 +75,8 @@ def run_analysis(
 
 
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
+            
+
 
     for channel, channel_loc in parameters['channels'].items():
         if parameters['preprocessing'] is not 'raw':
@@ -85,7 +89,12 @@ def run_analysis(
         if "rpe" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH with RPE focus")
             summary_plots.plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
-            
+        
+        if "choice_split_rpe" in parameters["plot_types"]:
+            logger.info("running NEURAL PSTH with CHOICE SPLIT RPE")
+            nwbs_all_split = [r_utils.split_nwb(nwb) for nwb in nwbs_all]
+            summary_plots.plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all_split, channel, channel_loc, offsets, loc = plot_loc)
+
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
     

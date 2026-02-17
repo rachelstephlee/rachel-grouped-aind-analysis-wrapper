@@ -14,7 +14,6 @@ import pandas as pd
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.lines import Line2D
 import seaborn as sns
-from scipy import stats
 
 
 
@@ -208,7 +207,134 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     
     return panels
 
+def plot_row_panels_left_right_RPE(nwb_split, channel, panels, offsets):
+    data_col = 'data'
+    error_type = 'sem'
+
+    trial_width_choice = [-1, 4]
+
+    RPE_binned3_label_names = nwb_split.df_trials['RPE-binned3'].cat.categories.astype(str).tolist()
+
+    # RPE
+    get_RPE_binned3_dfs = lambda df_trials: [
+        df_trials[df_trials['RPE-binned3'] == RPE]['choice_time_in_session'].values for RPE in RPE_binned3_label_names
+    ]
+
+    for i, df_trials_ch in enumerate([nwb_split.df_trials_left, nwb_split.df_trials_right]):
+
+        # RPE 
+        RPE_binned3_dfs_dicts = dict(zip(RPE_binned3_label_names, get_RPE_binned3_dfs(df_trials_ch)))
+
+        pf.plot_fip_psth_compare_alignments(
+                nwb_split, RPE_binned3_dfs_dicts, channel,
+                extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
+                tw=trial_width_choice, censor=True, data_column=data_col, error_type=error_type, ax=panels[i*3 + i]
+            )
+        panels[i*3 + i].set_title("")
+
+        # BASELINE
+
+        df_trials_ch = df_trials_ch.query(
+            'num_reward_past > -7 and num_reward_past < 7'
+        ).sort_values('trial')
+
+        sns.barplot(
+            x='num_reward_past',
+            y=f'{data_col}_{channel}_baseline',
+            data=df_trials_ch,
+            palette='vlag',
+            hue='num_reward_past',
+            errorbar='se',
+            dodge=False,
+            legend=False,
+            ax=panels[i*3 + i + 1]
+        )
+        panels[i*3 + i + 1].set_title("LEFT TRIALS" if i == 0 else "RIGHT TRIALS")
+
+        # RPE with baseline removed
+        pf.plot_fip_psth_compare_alignments(
+                nwb_split, RPE_binned3_dfs_dicts, channel,
+                extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
+                tw=trial_width_choice, censor=True, data_column=data_col+'_norm', error_type=error_type, ax=panels[i * 3 + i + 2]
+            )
+        panels[i * 3 + i + 2].set_title("")
+
+        panels[i * 3 + i + 2].fill_betweenx([0, 0.01], offsets[0], offsets[1], color = 'gray', alpha = 0.3 )
+
+        # average signals
+        avg_signal_cols = [c for c in df_trials_ch.columns if c.startswith("avg_data") and channel[:3] in c]
+
+        if len(avg_signal_cols) != 1:
+            print("incorrect number of avg_signal_col found, skipping RPE vs avg signal plot")
+            print(avg_signal_cols)
+            continue
+        
+        plot_RPE_by_avg_signal(df_trials_ch, avg_signal_cols[0], ax = panels[i * 3 + i + 3])
+    return panels
+
+def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, offsets, loc=None):
+    """
+    PSTH-focused version of plot_all_sess.
+    Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
+    producing one two-row block per session in nwbs_all.
+    """
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams["axes.spines.right"] = False
+    mpl.rcParams["axes.spines.top"] = False
+
+    nrows = len(nwbs_all)
+    ncols = 8
+    subject_id = df_sess['subject_id'].unique()[0]
+
+    # use constrained_layout to avoid tight_layout warnings with complex nested axes
+    fig = plt.figure(figsize=(ncols * 5, nrows*8), constrained_layout=True)
     
+    plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
+
+    # allocate one extra top row for the shared legend panels
+    outer = GridSpec(nrows + 1, 1, figure=fig)
+
+    # df_trials_all for consistent legend labels/colors across rows
+    df_trials_all = pd.concat([nwb.df_trials for nwb in nwbs_all])
+
+    # keep reference to the PSTH axes for final labeling
+    axes_rows = [None] * nrows
+
+    # For each session, create a single-row grid of ncols for PSTH panels
+    for row, nwb in enumerate(nwbs_all):
+        # create a small title row above the 4 panels using a nested GridSpec
+        inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
+        title_ax = fig.add_subplot(inner[0, :])
+        title_ax.axis('off')
+        title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
+
+        # create the n_cols panel axes for this row
+        panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
+
+        # PSTH panels for this session (place in second row)
+        plot_row_panels_left_right_RPE(nwb, channel, panels, offsets)
+
+        axes_rows[row] = panels
+
+    # set bottom row xlabels using the last row panels
+    last_panels = axes_rows[-1]
+    if last_panels is not None:
+        last_panels[1].set_xlabel('num_reward_past')
+        last_panels[5].set_xlabel('num_reward_past')
+        last_panels[0].set_xlabel('Time (s) from choice')
+        last_panels[2].set_xlabel('Time (s) from choice')
+        last_panels[4].set_xlabel('Time (s) from choice')
+        last_panels[6].set_xlabel('Time (s) from choice')
+        last_panels[3].set_xlabel('RPE_earned')
+        last_panels[7].set_xlabel('RPE_earned')
+
+
+
+    if loc is not None:
+        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi=300)
+        plt.close(fig)
+
+
 def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc=None):
 
     week_intervals = sorted(df_sess['week_interval'].unique())
