@@ -391,6 +391,7 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
         censor=True, data_column=data_col,
         error_type=error_type, ax=panels[0])
     panels[0].set_title("")
+    panels[0].set_xlabel("")
 
     # rew/nrew/ignore
     pf.plot_fip_psth_compare_alignments(
@@ -403,6 +404,9 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
         censor=True, data_column=data_col,
         error_type=error_type, ax=panels[1])
     panels[1].set_title("")
+    panels[1].set_xlabel("")
+    panels[1].set_ylabel("")
+
 
     # left/right/ignore
     pf.plot_fip_psth_compare_alignments(
@@ -415,6 +419,8 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
         censor=True, data_column=data_col,
         error_type=error_type, ax=panels[2])
     panels[2].set_title("")
+    panels[2].set_xlabel("")
+    panels[2].set_ylabel("")
 
     # stay/switch
     pf.plot_fip_psth_compare_alignments(
@@ -427,7 +433,8 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
         error_type=error_type, ax=panels[3])
     panels[3].set_title("")
     panels[3].get_legend().remove()
-
+    panels[3].set_xlabel("")
+    panels[3].set_ylabel("")
     return panels
 
 
@@ -447,7 +454,8 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
     subject_id = df_sess['subject_id'].unique()[0]
 
     # use constrained_layout to avoid tight_layout warnings with complex nested axes
-    fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 3)), constrained_layout=True)
+    fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 3)), 
+             constrained_layout=True)
     
     plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
 
@@ -478,7 +486,8 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
         title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
 
         # PSTH panels for this session (place in second row)
-        psth_axes = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
+        first_ax = fig.add_subplot(inner[1, 0])
+        psth_axes = [fig.add_subplot(inner[1, col],sharey = first_ax) for col in range(ncols)]
         plot_row_panels_PSTH_extras([nwb], channel, psth_axes, legend_panel=False)
 
         axes_rows[row] = psth_axes
