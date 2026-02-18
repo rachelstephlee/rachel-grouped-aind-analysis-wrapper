@@ -334,6 +334,167 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
         plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
         plt.close(fig)
 
+def plot_row_panels_PSTH_extras_legends(panels):
+    # column 0: hit/miss
+    hit_miss_labels = ['hit', 'miss']
+    hit_miss_colors = ['orange', 'black']
+    # proxy artists (empty) — we'll color the legend text via labelcolor
+    handles = [Line2D([], [], linestyle='', marker='') for _ in hit_miss_colors]
+    panels[0].axis('off')
+    panels[0].legend(handles, hit_miss_labels, title='hit/miss', ncol=1, loc='center', frameon=False, labelcolor=hit_miss_colors)
+
+    # column 1: rew/norew/ignore
+    rew_labels = ['rew', 'no-rew', 'ignore']
+    rew_colors = ['magenta', 'grey', 'black']
+    handles = [Line2D([], [], linestyle='', marker='') for _ in rew_colors]
+    panels[1].axis('off')
+    panels[1].legend(handles, rew_labels, title='reward', ncol=1, loc='center', frameon=False, labelcolor=rew_colors)
+
+    # column 2: left/right/ignore
+    choice_labels = ['left', 'right', 'ignore']
+    choice_colors = ['blue', 'red', 'black']
+    # proxy artists (empty) — we'll color the legend text via labelcolor
+    handles = [Line2D([], [], linestyle='', marker='') for _ in choice_colors]
+    panels[2].axis('off')
+    panels[2].legend(handles, choice_labels, title='choice', ncol=1, loc='center', frameon=False, labelcolor=choice_colors)
+
+    # column 3: stay/switch
+    stay_switch_labels = ['stay', 'switch']
+    stay_switch_colors = ['green', 'lime']
+    # proxy artists (empty) — we'll color the legend text via labelcolor
+    handles = [Line2D([], [], linestyle='', marker='') for _ in stay_switch_colors]
+    panels[3].axis('off')
+    panels[3].legend(handles, stay_switch_labels, title='stay/switch', ncol=1, loc='center', frameon=False, labelcolor=stay_switch_colors)
+
+    return panels
+
+def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
+
+    trial_width_go = [-1, 4]
+    if legend_panel:
+        return plot_row_panels_PSTH_extras_legends(panels)
+    
+    if len(nwbs) > 1:
+        error_type = 'sem_over_sessions'
+        data_col = 'data_z'
+    else:
+        error_type = 'sem'
+        data_col = 'data'
+
+    # hit/miss
+    pf.plot_fip_psth_compare_alignments(
+        nwbs, 
+        [{"hit": nwb.df_trials.query("choice < 2").goCue_start_time_in_session.values,
+        "miss": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
+        channel, tw=trial_width_go, 
+        extra_colors={"hit":"orange", "miss":"black"},
+        censor=True, data_column=data_col,
+        error_type=error_type, ax=panels[0])
+    panels[0].set_title("")
+
+    # rew/nrew/ignore
+    pf.plot_fip_psth_compare_alignments(
+        nwb, 
+        [{"rew": nwb.df_trials.query("earned_reward == 1").goCue_start_time_in_session.values,
+        "nrew": nwb.df_trials.query("earned_reward == 0").goCue_start_time_in_session.values,
+        "ignore": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
+        channel, tw=trial_width_go, 
+        extra_colors={"rew":"magenta", "nrew":"grey","ignore":"black"},
+        censor=True, data_column=data_col,
+        error_type=error_type, ax=panels[1])
+    panels[1].set_title("")
+
+    # left/right/ignore
+    pf.plot_fip_psth_compare_alignments(
+        nwbs, 
+        [{"left": nwb.df_trials.query("choice == 0").goCue_start_time_in_session.values,
+        "right": nwb.df_trials.query("choice == 1").goCue_start_time_in_session.values,
+        "ignore": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
+        channel, tw=trial_width_go, 
+        extra_colors={"left":"blue", "right":"red","ignore":"black"},
+        censor=True, data_column=data_col,
+        error_type=error_type, ax=panels[2])
+    panels[2].set_title("")
+
+    # stay/switch
+    pf.plot_fip_psth_compare_alignments(
+        nwbs, 
+        [{"stay": nwb.df_trials.query("stay == True").goCue_start_time_in_session.values,
+        "switch": nwb.df_trials.query("stay == False").goCue_start_time_in_session.values} for nwb in nwbs],
+        channel, tw=trial_width_go, 
+        extra_colors={"stay":"green", "switch":"lime"},
+        censor=True, data_column=data_col,
+        error_type=error_type, ax=panels[3])
+    panels[3].set_title("")
+
+    return panels
+
+
+
+def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None):
+    """
+    PSTH-focused version of plot_all_sess.
+    Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
+    producing one two-row block per session in nwbs_all.
+    """
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams["axes.spines.right"] = False
+    mpl.rcParams["axes.spines.top"] = False
+
+    nrows = len(nwbs_all)
+    ncols = 4
+    subject_id = df_sess['subject_id'].unique()[0]
+
+    # use constrained_layout to avoid tight_layout warnings with complex nested axes
+    fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 1)), constrained_layout=True)
+    
+    plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
+
+    # allocate one extra top row for the shared legend panels
+    outer = GridSpec(nrows + 1, 1, figure=fig)
+
+    # Top: single legend row spanning the top outer[0]
+    legend_inner = GridSpecFromSubplotSpec(1, ncols, subplot_spec=outer[0], height_ratios=[0.15], hspace=0.0, wspace=0.3)
+    legend_axes = [fig.add_subplot(legend_inner[0, col]) for col in range(ncols)]
+    plot_row_panels_PSTH_extras_legends(legend_axes)
+
+    # keep reference to the PSTH axes for final labeling
+    axes_rows = [None] * nrows
+
+    # For each session, create a single-row grid of ncols for PSTH panels
+    for row, nwb in enumerate(nwbs_all):
+        inner = GridSpecFromSubplotSpec(
+            2,
+            ncols,
+            subplot_spec=outer[row + 1],
+            height_ratios=[0.12, 0.88],
+            hspace=0.0,
+            wspace=0.3,
+        )
+        # title row (single axis spanning all columns)
+        title_ax = fig.add_subplot(inner[0, :])
+        title_ax.axis('off')
+        title_ax.set_title(f"{nwb}", fontsize=16, fontweight='bold')
+
+        # PSTH panels for this session (place in second row)
+        psth_axes = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
+        plot_row_panels_PSTH_extras([nwb], channel, psth_axes, legend_panel=False)
+
+        axes_rows[row] = psth_axes
+    
+    # set bottom row xlabels using the last row panels
+    for panel_legend in [axes_rows[-1],axes_rows[0]]:
+        if panel_legend is not None:
+            panel_legend[0].set_xlabel('Time (s) from goCue')
+            panel_legend[1].set_xlabel('Time (s) from goCue')
+            panel_legend[2].set_xlabel('Time (s) from goCue')
+            panel_legend[3].set_xlabel('Time (s) from goCue')
+        if len(axes_rows) < 5:
+            break
+
+    if loc is not None:
+        plt.savefig(f"{loc}all_sess_PSTH_extras{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
+        plt.close(fig)
 
 def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc=None):
 
@@ -541,7 +702,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
 
     if legend_panel:
         return plot_row_panels_PSTH_legends(df_trials_all, panels)
-    
+
     if len(nwbs) > 1:
         error_type = 'sem_over_sessions'
         data_col = 'data_z'
