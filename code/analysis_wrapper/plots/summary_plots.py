@@ -394,7 +394,7 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
 
     # rew/nrew/ignore
     pf.plot_fip_psth_compare_alignments(
-        nwb, 
+        nwbs, 
         [{"rew": nwb.df_trials.query("earned_reward == 1").goCue_start_time_in_session.values,
         "nrew": nwb.df_trials.query("earned_reward == 0").goCue_start_time_in_session.values,
         "ignore": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
@@ -426,6 +426,7 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
         censor=True, data_column=data_col,
         error_type=error_type, ax=panels[3])
     panels[3].set_title("")
+    panels[3].get_legend().remove()
 
     return panels
 
@@ -446,7 +447,7 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
     subject_id = df_sess['subject_id'].unique()[0]
 
     # use constrained_layout to avoid tight_layout warnings with complex nested axes
-    fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 1)), constrained_layout=True)
+    fig = plt.figure(figsize=(ncols * 5, max(4, (nrows) * 4 + 3)), constrained_layout=True)
     
     plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize=16)
 
@@ -493,7 +494,7 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
             break
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_PSTH_extras{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
+        plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
         plt.close(fig)
 
 def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc=None):

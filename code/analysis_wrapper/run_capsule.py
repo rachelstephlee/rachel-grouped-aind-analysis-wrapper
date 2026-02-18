@@ -95,6 +95,9 @@ def run_analysis(
             nwbs_all_split = [r_utils.split_nwb(nwb) for nwb in nwbs_all]
             summary_plots.plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all_split, channel, channel_loc, offsets, loc = plot_loc)
 
+        if "all_sess_extra" in parameters["plot_types"]:
+            summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
     
