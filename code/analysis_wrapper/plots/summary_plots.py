@@ -331,7 +331,7 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
 
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi=300)
+        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
         plt.close(fig)
 
 
