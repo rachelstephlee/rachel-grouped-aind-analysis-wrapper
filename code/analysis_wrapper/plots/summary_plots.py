@@ -331,7 +331,7 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
 
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
+        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi = 200)
         plt.close(fig)
 
 def plot_row_panels_PSTH_extras_legends(panels):
@@ -370,7 +370,7 @@ def plot_row_panels_PSTH_extras_legends(panels):
 
 def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
 
-    trial_width_go = [-1, 4]
+    trial_width_go = [-1.5, 4]
     if legend_panel:
         return plot_row_panels_PSTH_extras_legends(panels)
     
@@ -503,7 +503,7 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
             break
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False)
+        plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi = 200)
         plt.close(fig)
 
 def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc=None):
