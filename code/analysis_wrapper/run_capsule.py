@@ -92,8 +92,14 @@ def run_analysis(
         
         if "choice_split_rpe" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH with CHOICE SPLIT RPE")
-            nwbs_all_split = [r_utils.split_nwb(nwb) for nwb in nwbs_all]
+            nwbs_all_split = [r_utils.split_nwb_by_choice(nwb) for nwb in nwbs_all]
             summary_plots.plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all_split, channel, channel_loc, offsets, loc = plot_loc)
+
+        if "sess_split_extra" in paramters["plot_types"]:
+            logger.info("running hit/miss with early vs late")
+            nwb_early, nwb_late = tuple(map(list, zip(*(r_utils.split_nwb_by_time(n) for n in nwbs_all))))
+            summary_plots.plot_all_sess_PSTH_extras(df_sess, nwb_early, channel, channel_loc, loc = plot_loc + 'early_')
+            summary_plots.plot_all_sess_PSTH_extras(df_sess, nwb_late, channel, channel_loc, loc = plot_loc + 'late_')
 
         if "all_sess_extra" in parameters["plot_types"]:
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
