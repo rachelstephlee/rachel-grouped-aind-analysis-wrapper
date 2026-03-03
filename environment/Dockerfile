@@ -40,7 +40,7 @@ RUN --mount=type=secret,id=git-access-token \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@foraging_session_animal_response#egg=aind-dynamic-foraging-basic-analysis \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@v0.1.36#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@ae433685788495d8cc63032d2a8fb67cb354190f#egg=analysis-pipeline-utils \
-    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@31c6eeb88e05f0affd98d29f8a512d66f0fb6db3#egg=rachel-analysis-utils
+    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@3936cc683d68b1d23adaef7f03ae2e97dd438631#egg=rachel-analysis-utils
 
 COPY postInstall /
 RUN --mount=type=secret,id=secrets . /run/secrets/secrets \
