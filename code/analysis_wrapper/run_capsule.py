@@ -85,11 +85,19 @@ def run_analysis(
         if "all_sess" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH")
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+            if "subsample" in parameters["plot_types"]:
+                logger.info("running left/right subsampled NEURAL PSTH")
+                nwb_subsample = [r_utils.subsample_lr_thirds(nwb) for nwb in nwbs_all]
+                summary_plots.plot_all_sess_PSTH(df_sess, nwb_subsample, channel, channel_loc, loc = plot_loc + 'subsample_')
 
         if "rpe" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH with RPE focus")
             summary_plots.plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
-        
+            if "subsample" in parameters["plot_types"]:
+                logger.info("running left/right subsampled NEURAL PSTH with RPE focus")
+                nwb_subsample = [r_utils.subsample_lr_thirds(nwb) for nwb in nwbs_all]
+                summary_plots.plot_all_sess_RPE(df_sess, nwb_subsample, channel, channel_loc, loc = plot_loc + 'subsample_')
+
         if "choice_split_rpe" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH with CHOICE SPLIT RPE")
             nwbs_all_split = [r_utils.split_nwb_by_choice(nwb) for nwb in nwbs_all]
@@ -101,6 +109,8 @@ def run_analysis(
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwb_early, channel, channel_loc, loc = plot_loc + 'early_')
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwb_late, channel, channel_loc, loc = plot_loc + 'late_')
 
+
+            
         if "all_sess_extra" in parameters["plot_types"]:
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
 
