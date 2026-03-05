@@ -11,12 +11,12 @@
 		"pip": {
 			"packages": [
 				{
-					"name": "boto3",
-					"version": "1.42.30"
+					"name": "analysis-pipeline-utils",
+					"version": "0.2.1"
 				},
 				{
-					"name": "git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils#egg=analysis-pipeline-utils",
-					"version": "a22d3a9696196f85982aaac1b12e9f60080d908c"
+					"name": "boto3",
+					"version": "1.42.30"
 				},
 				{
 					"name": "pydantic-settings",
