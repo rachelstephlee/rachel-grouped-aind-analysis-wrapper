@@ -1,4 +1,7 @@
 {
+    "asset_name": [
+        "820117_example_asset"
+    ],
     "s3_location": [
         "s3://codeocean-s3datasetsbucket-1u41qdg42ur9/8351747a-f472-43f9-a53b-cd1f9aa35288"
     ],
