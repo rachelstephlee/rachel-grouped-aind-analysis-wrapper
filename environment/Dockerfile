@@ -21,6 +21,8 @@ RUN --mount=type=secret,id=git-access-token \
     boto3==1.37.3 \
     ipykernel==6.30.0 \
     ipympl==0.9.6 \
+    fastparquet==2.3.1 \
+    pyarrow==23.0.1 \
     matplotlib==3.7.5 \
     numpy==1.26.4 \
     pandas==2.3.1 \
@@ -40,7 +42,7 @@ RUN --mount=type=secret,id=git-access-token \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@foraging_session_animal_response#egg=aind-dynamic-foraging-basic-analysis \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@v0.1.36#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@ae433685788495d8cc63032d2a8fb67cb354190f#egg=analysis-pipeline-utils \
-    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@3936cc683d68b1d23adaef7f03ae2e97dd438631#egg=rachel-analysis-utils
+    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@5a7dd3a1402f758657228ec4e1a2c07a582504e2#egg=rachel-analysis-utils
 
 COPY postInstall /
 RUN --mount=type=secret,id=secrets . /run/secrets/secrets \

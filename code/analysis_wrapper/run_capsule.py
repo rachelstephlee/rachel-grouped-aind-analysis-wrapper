@@ -64,6 +64,7 @@ def run_analysis(
                                                 data_column = "data_norm", offsets = offsets)
 
 
+
     # plot summary plots
     if dry_run:
         plot_loc = '/root/capsule/results/plots_TEST/'
@@ -73,15 +74,17 @@ def run_analysis(
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
+    if parameters["save_dfs"] == True:
+        r_utils.save_nwb_list(nwbs_by_week, '/results/data/', df_sess)
+
+        
 
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
-            
-
 
     for channel, channel_loc in parameters['channels'].items():
         if parameters['preprocessing'] != 'raw':
-            channel = channel +  '_' + parameters['preprocessing'] 
-        
+            channel = channel +  '_' + parameters['preprocessing']
+
         if "all_sess" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH")
             summary_plots.plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)

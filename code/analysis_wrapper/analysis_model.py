@@ -23,6 +23,7 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
     preprocessing: str=Field(description="preprocessing_method", default = "dff-bright_mc-iso-IRLS")
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
     dry_run: bool=Field(default=True, description="Dry run")
+    save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis")
 # only saving plots, no outputs needed 
 # class SummaryResultsAnalysisOutputs(GenericModel):
 #     """
