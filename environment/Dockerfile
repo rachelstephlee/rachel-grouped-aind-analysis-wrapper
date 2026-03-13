@@ -4,7 +4,7 @@ FROM $REGISTRY_HOST/codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG GIT_ASKPASS
-COPY git-askpass /
+COPY git-ask-pass /
 
 ENV DOCDB_HOST=api.allenneuraldynamics.org
 ENV DOCDB_DATABASE=analysis
@@ -21,7 +21,7 @@ RUN --mount=type=secret,id=git-access-token \
     boto3==1.37.3 \
     ipykernel==6.30.0 \
     ipympl==0.9.6 \
-    fastparquet==2.3.1 \
+    fastparquet==2025.12.0 \
     pyarrow==23.0.1 \
     matplotlib==3.7.5 \
     numpy==1.26.4 \

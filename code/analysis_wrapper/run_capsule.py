@@ -58,6 +58,14 @@ def run_analysis(
 
     (df_sess, nwbs_by_week) = r_utils.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
 
+    # plot summary plots
+    if dry_run:
+        plot_loc = '/root/capsule/results/plots_TEST/'
+    else:
+        plot_loc = '/results/plots/'
+
+    [Path(f"/results/data/{subject_id}").mkdir(parents=True, exist_ok=True) for subject_id in df_sess['subject_id'].unique()]
+
     if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"]:
         offsets = [0.33,1]
         (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, parameters, 
@@ -65,11 +73,7 @@ def run_analysis(
 
 
 
-    # plot summary plots
-    if dry_run:
-        plot_loc = '/root/capsule/results/plots_TEST/'
-    else:
-        plot_loc = '/results/plots/'
+
 
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
