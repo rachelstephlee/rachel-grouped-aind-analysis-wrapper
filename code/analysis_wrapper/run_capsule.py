@@ -66,11 +66,11 @@ def run_analysis(
 
     [Path(f"/results/data/{subject_id}").mkdir(parents=True, exist_ok=True) for subject_id in df_sess['subject_id'].unique()]
 
-    if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"]:
+    
+    if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"] or "rpe_no_plots" in parameters["plot_types"]:
         offsets = [0.33,1]
         (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, parameters, 
                                                 data_column = "data_norm", offsets = offsets)
-
 
 
 
