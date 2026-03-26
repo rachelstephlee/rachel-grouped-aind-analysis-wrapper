@@ -11,6 +11,7 @@ import matplotlib.gridspec as gridspec
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.lines import Line2D
 import seaborn as sns
@@ -31,6 +32,61 @@ mpl.rcParams.update({
 })
 
 
+
+def regression_choice_time_vs_reward(df,  y_col, reward_col='earned_reward',max_lag=6):
+    """
+    Fit OLS of y_col against reward at current trial and up to max_lag previous trials.
+
+    Returns:
+        - dict with keys:
+        'model' : full statsmodels RegressionResults (all lags)
+        'coef'  : DataFrame of coefficients, p-values, conf intervals for the full model
+        'univariate' : dict of RegressionResults for each single-lag regression
+    """
+
+
+    df = df.copy()
+    # construct lagged reward columns: lag0 = current trial, lag1 = previous trial, etc.
+    lagged = pd.DataFrame({f"{reward_col}_lag{lag}": df[reward_col].shift(lag).astype(float)
+                            for lag in range(0, max_lag + 1)}, index=df.index)
+    y = df[y_col]
+    data = pd.concat([y, lagged], axis=1).dropna()
+    X = data[lagged.columns]
+    model = sm.OLS(data[y_col], X).fit()
+
+    # summary table for full model
+    coef = model.params.to_frame(name='coef')
+    coef['pvalue'] = model.pvalues
+    ci = model.conf_int()
+    coef['ci_lower'] = ci[0]
+    coef['ci_upper'] = ci[1]
+
+
+    return {'model': model, 'coef': coef}
+
+def plot_bayer_glimcher(nwb, channel, max_lag=6):
+    # get trial-level data
+    df_trials = nwb.df_trials
+    y_col = f'avg_data_norm_{channel}_choice_time'
+    # run regression
+    results = regression_choice_time_vs_reward(df_trials, reward_col='earned_reward', max_lag=max_lag, y_col=y_col)
+
+    coef_df = results['coef'].reset_index().rename(columns={'index': 'lag'})
+    coef_df['lag_num'] = coef_df['lag'].str.extract(r'lag(\d+)').astype(int)
+
+    # plot coefficients with error bars
+    plt.figure(figsize=(8, 5))
+    sns.lineplot(x='lag_num', y='coef', data=coef_df)
+    plt.errorbar(x=coef_df['lag_num'], y=coef_df['coef'], 
+                 yerr=[coef_df['coef'] - coef_df['ci_lower'], coef_df['ci_upper'] - coef_df['coef']], 
+                 fmt='none', c='black', capsize=5)
+    plt.axhline(0, color='gray', linestyle='--')
+    plt.xlabel('Reward Lag (0=current trial)')
+    plt.ylabel('Regression Coefficient on Choice Time')
+    plt.title('Bayer & Glimcher Style Regression of Choice Time on Past Rewards')
+    plt.xticks(coef_df['lag_num'])
+    plt.tight_layout()
+    plt.show()
 
 def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
 
