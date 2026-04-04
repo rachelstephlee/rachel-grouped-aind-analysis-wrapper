@@ -21,6 +21,10 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
                     Keys = channel name, Value = intended location and measurement. \
                     NO preprocessing method included in suffix.")
     preprocessing: str=Field(description="preprocessing_method", default = "dff-bright_mc-iso-IRLS")
+    pearson_pairs: list[tuple[str, str]] = Field(
+        default_factory=list,
+        description="List of channel pairs to compute Pearson r for; each pair is (channel1, channel2) without the preprocessing method"
+    )
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
     dry_run: bool=Field(default=True, description="Dry run")
     save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis")

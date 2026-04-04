@@ -30,8 +30,21 @@ DATA_PATH: Path = Path("/data")  # TODO: don't hardcode
 ANALYSIS_BUCKET = os.getenv("ANALYSIS_BUCKET")
 logger = logging.getLogger(__name__)
 
+def validate_pearsonr(parameters):
+    channel_keys = set(parameters['channels'].keys())
+    pair_keys = set(dict.fromkeys(ch for pair in parameters['pearson_pairs'] for ch in pair))
 
-      
+    missing = pair_keys - channel_keys
+    if missing:
+        print("Missing channels referenced in parameters['pearson_pairs']:", missing)
+        # drop any pairs that reference missing channels
+        valid_pairs = [pair for pair in parameters.get('pearson_pairs', []) if all(ch in channel_keys for ch in pair)]
+        removed = [pair for pair in parameters.get('pearson_pairs', []) if pair not in valid_pairs]
+        if removed:
+            print("Removing pairs with missing channels:", removed)
+        parameters['pearson_pairs'] = valid_pairs
+
+    return parameters  
 
 def run_analysis(
     analysis_dispatch_inputs: AnalysisDispatchModel,
@@ -72,9 +85,23 @@ def run_analysis(
         (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, parameters, 
                                                 data_column = "data_norm", offsets = offsets)
 
+    parameters = validate_pearsonr(parameters)
 
+    nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
 
+    for pair in parameters['pearson_pairs']:
+        if parameters['preprocessing'] != 'raw':
+            signal1 = pair[0] +  '_' + parameters['preprocessing']
+            signal2 = pair[1] +  '_' + parameters['preprocessing']
+        else:
+            signal1, signal2 = pair[0], pair[1]
+        nwbs_all = [analysis_utils.add_sliding_window_corr(
+                    nwb,
+                    signal1name=signal1,
+                    signal2name=signal2,
+                ) for nwb in nwbs_all]
 
+    ############## SAVE OR PREPARE PLOT_LOC ##############
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
@@ -83,7 +110,7 @@ def run_analysis(
 
         
 
-    nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
+    ############## RUN ANALYSIS ##############
 
     for channel, channel_loc in parameters['channels'].items():
         if parameters['preprocessing'] != 'raw':
