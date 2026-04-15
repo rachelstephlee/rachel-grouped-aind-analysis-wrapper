@@ -176,8 +176,8 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     # 1. Choice L vs R
     pf.plot_fip_psth_compare_alignments(
             nwbs,
-            [{"left": nwb.df_trials.query("choice == 0").choice_time_in_session.values,
-              "right": nwb.df_trials.query("choice == 1").choice_time_in_session.values} for nwb in nwbs],
+            [{"left": nwb.df_trials.query("animal_response == 0").choice_time_in_session.values,
+              "right": nwb.df_trials.query("animal_response == 1").choice_time_in_session.values} for nwb in nwbs],
             channel,
             tw=trial_width_choice,
             extra_colors={"left": 'b', "right": 'r'},
@@ -470,9 +470,9 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
     # left/right/ignore
     pf.plot_fip_psth_compare_alignments(
         nwbs, 
-        [{"left": nwb.df_trials.query("choice == 0").goCue_start_time_in_session.values,
-        "right": nwb.df_trials.query("choice == 1").goCue_start_time_in_session.values,
-        "ignore": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
+        [{"left": nwb.df_trials.query("animal_response == 0").goCue_start_time_in_session.values,
+        "right": nwb.df_trials.query("animal_response == 1").goCue_start_time_in_session.values,
+        "ignore": nwb.df_trials.query("animal_response == 2").goCue_start_time_in_session.values} for nwb in nwbs],
         channel, tw=trial_width_go, 
         extra_colors={"left":"blue", "right":"red","ignore":"black"},
         censor=True, data_column=data_col,
@@ -782,9 +782,9 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     # 1. Choice L vs R
     pf.plot_fip_psth_compare_alignments(
             nwbs,
-            [{"left": nwb.df_trials.query("choice == 0").choice_time_in_session.values,
-              "right": nwb.df_trials.query("choice == 1").choice_time_in_session.values,
-              "ignore":nwb.df_trials.query("choice == 2").choice_time_in_session.values} for nwb in nwbs],
+            [{"left": nwb.df_trials.query("animal_response == 0").choice_time_in_session.values,
+              "right": nwb.df_trials.query("animal_response == 1").choice_time_in_session.values,
+              "ignore":nwb.df_trials.query("animal_response == 2").choice_time_in_session.values} for nwb in nwbs],
             channel,
             tw=trial_width_choice,
             extra_colors={"left": 'b', "right": 'r', "ignore":"purple"},
