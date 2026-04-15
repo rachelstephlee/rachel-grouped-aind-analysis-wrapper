@@ -1395,6 +1395,12 @@ def plot_rolling_pearsons_PSTH(nwb, channel_combos, parameters, panels):
     panels[-1].legend(proxies, legend_labels, frameon=False, loc="center", fontsize="small")
 
     return panels
+def nwb_has_pearson(nwb_obj, channel_combos):
+    if not hasattr(nwb_obj, "df_fip") or nwb_obj.df_fip is None or len(nwb_obj.df_fip) == 0:
+        return False
+    pearson_event_name = f"{channel_combos[0]}:{channel_combos[1]}_pearsonR"
+    evs = nwb_obj.df_fip['event'].astype(str).unique()
+    return pearson_event_name in evs
 
 def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=None):
     """
@@ -1415,7 +1421,7 @@ def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=Non
     gs = GridSpec(nrows=nrows, ncols=ncols, figure=fig, width_ratios=[1, 1, 1, 1, 0.25], hspace=0.3, wspace=0.4)
 
     plt.suptitle(f"{subject_id} {channel_combos[0]} ({parameters['channels'][channel_combos[0]]}) +" + 
-                    "{channel_combos[1]} ({parameters['channels'][channel_combos[1]]})", fontsize=16)
+                    f"{channel_combos[1]} ({parameters['channels'][channel_combos[1]]})", fontsize=16)
 
     outer = GridSpec(nrows, 1, figure=fig)
     # keep reference to the PSTH axes for final labeling
@@ -1428,7 +1434,10 @@ def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=Non
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[0, col]) for col in range(ncols)]
-
+        if not nwb_has_pearson(nwb, channel_combos):
+            # skip this row (leave an empty slot)
+            axes_rows[row] = None
+            continue
         # PSTH panels for this session (place in second row)
         panels = plot_rolling_pearsons_PSTH(nwb, channel_combos, parameters, panels)
 
