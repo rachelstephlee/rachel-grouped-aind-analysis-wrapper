@@ -5,6 +5,8 @@ from aind_dynamic_foraging_basic_analysis.plot import plot_fip as pf
 from aind_dynamic_foraging_basic_analysis.plot import plot_foraging_session as pb
 from aind_dynamic_foraging_basic_analysis.plot import plot_session_scroller as pss
 import rachel_analysis_utils.analysis_utils as analysis_utils
+from aind_dynamic_foraging_basic_analysis.licks import annotation as annotation
+
 
 import matplotlib.gridspec as gridspec
 
@@ -13,6 +15,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from matplotlib.collections import PolyCollection, PatchCollection
 from matplotlib.lines import Line2D
 import seaborn as sns
 
@@ -1275,3 +1278,177 @@ def plot_all_sess_behavior(df_sess, nwbs_all,loc=None):
         plt.savefig(f'{loc}{nwbs_all[0].session_id.replace("behavior_","")}_behavior.png'
                             ,bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
+
+
+
+
+def plot_rolling_pearsons_PSTH(nwb, channel_combos, parameters, panels):
+    """
+    Plot a row of summary panels for a given set of NWB sessions and a specific channel.
+
+    This function generates a set of five panels summarizing neural and behavioral data:
+        1. PSTH for left vs right choices.
+        2. PSTH split by RPE-binned3 categories.
+        3. Baseline z-scored df/f by number of past rewards.
+        4. PSTH split by RPE-binned3 with baseline removed.
+        5. Scatter and regression of RPE vs average signal.
+
+    Args:
+        nwbs (list): List of NWB session objects, each with a .df_trials DataFrame.
+        channel (str): Channel name to plot.
+        panels (list): List of matplotlib Axes objects (length 5) to plot into.
+
+    Returns:
+        list: The input list of matplotlib Axes, with plots drawn.
+    """
+    trial_width_choice = [-2, 4]
+     
+
+    # error_type = 'sem'
+    data_col = 'data_z'
+    if not hasattr(nwb, "df_licks") or nwb.df_licks is None:
+        nwb.df_licks = annotation.annotate_licks(nwb)
+    if  parameters['preprocessing'] == 'raw':
+        preprocessing_suffix = ''
+    else:
+        preprocessing_suffix = '_' + parameters['preprocessing']
+
+    channel1 = channel_combos[0] + preprocessing_suffix
+    channel2 = channel_combos[1] + preprocessing_suffix
+
+    # 1. compare two channels + their pearson rolling at go cue. 
+    pf.plot_fip_psth_compare_channels(
+                nwb,
+                nwb.df_trials.goCue_start_time_in_session.values,
+                tw = trial_width_choice,
+                channels = [channel1, channel2
+                ,f'{channel_combos[0]}:{channel_combos[1]}_pearsonR'
+                ],
+               data_column=data_col, ax =panels[0])
+    panels[0].set_xlabel('time from go cue')
+    panels[0].set_ylabel(f'z-scored dff ')
+    panels[0].set_title('')
+
+    # 2 hit trials only
+    pf.plot_fip_psth_compare_channels(
+            nwb,
+            nwb.df_trials.query('animal_response < 2').goCue_start_time_in_session.values,
+            tw = trial_width_choice,
+                channels = [channel1, channel2
+                ,f'{channel_combos[0]}:{channel_combos[1]}_pearsonR'
+                ],
+            data_column=data_col, ax=panels[1])
+    panels[1].set_xlabel('time from go cue')
+    panels[1].set_ylabel(f'z-scored dff ')
+    panels[1].set_title('Hit Trials')
+
+    # 3 miss trials only
+    pf.plot_fip_psth_compare_channels(
+            nwb,
+            nwb.df_trials.query('animal_response == 2').goCue_start_time_in_session.values,
+            tw = trial_width_choice,
+                channels = [channel1, channel2
+                ,f'{channel_combos[0]}:{channel_combos[1]}_pearsonR'
+                ],
+            data_column=data_col, ax=panels[2])
+    panels[2].set_xlabel('time from go cue')
+    panels[2].set_ylabel(f'z-scored dff ')
+    panels[2].set_title('Miss Trials')
+
+    # 4 timelock to first intertrial lick bout
+    pf.plot_fip_psth_compare_channels(
+            nwb,
+            nwb.df_licks.query('bout_intertrial_choice and bout_start').timestamps.values,
+            tw = trial_width_choice,
+                channels = [channel1, channel2
+                ,f'{channel_combos[0]}:{channel_combos[1]}_pearsonR'
+                ],
+            data_column=data_col, ax=panels[3])
+    panels[3].set_xlabel('time from ITI lick bout start')
+    panels[3].set_ylabel(f'z-scored dff ')
+
+    panels[3].set_title('')
+
+
+    colors = ["red", "dodgerblue", "violet"]  # first, second, third desired colors
+    for ax in panels:
+        ax.set_title("")
+        ax.set_xlabel("")
+
+        # set colors for the first up-to-three Line2D artists (if present)
+        lines = list(ax.get_lines())
+        for i, col in enumerate(colors):
+            if i < len(lines):
+                lines[i].set_color(col)
+
+        # also color the first up-to-three fill_between artists (PolyCollection / PatchCollection)
+        fills = [c for c in ax.collections if isinstance(c, (PolyCollection, PatchCollection))]
+        for i, col in enumerate(colors):
+            if i < len(fills):
+                rgba = mpl.colors.to_rgba(col, alpha=0.7)
+                # PolyCollection / PatchCollection support set_facecolor / set_edgecolor
+                fills[i].set_facecolor(rgba)
+                fills[i].set_edgecolor(rgba)
+    legend_labels = [parameters['channels'][channel_combos[0]], parameters['channels'][channel_combos[1]], "Pearson R"]
+    panels[-1].axis("off")
+    proxies = [Line2D([0], [0], color=colors[i], lw=2) for i in range(len(legend_labels))]
+    panels[-1].legend(proxies, legend_labels, frameon=False, loc="center", fontsize="small")
+
+    return panels
+
+def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=None):
+    """
+    PSTH-focused version of plot_all_sess.
+    Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
+    producing one two-row block per session in nwbs_all.
+    """
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams["axes.spines.right"] = False
+    mpl.rcParams["axes.spines.top"] = False
+
+    nrows = len(nwbs_all)
+    ncols = 5
+    subject_id = df_sess['subject_id'].unique()[0]
+
+    # use constrained_layout to avoid tight_layout warnings with complex nested axes
+    fig = plt.figure(figsize=(ncols * 5, nrows*4), constrained_layout=True)
+    gs = GridSpec(nrows=nrows, ncols=ncols, figure=fig, width_ratios=[1, 1, 1, 1, 0.25], hspace=0.3, wspace=0.4)
+
+    plt.suptitle(f"{subject_id} {channel_combos[0]} ({parameters['channels'][channel_combos[0]]}) +" + 
+                    "{channel_combos[1]} ({parameters['channels'][channel_combos[1]]})", fontsize=16)
+
+    outer = GridSpec(nrows, 1, figure=fig)
+    # keep reference to the PSTH axes for final labeling
+    axes_rows = [None] * nrows
+
+    # For each session, create a single-row grid of ncols for PSTH panels
+    for row, nwb in enumerate(nwbs_all):
+        # create a small title row above the 4 panels using a nested GridSpec
+        inner = GridSpecFromSubplotSpec(1, ncols, subplot_spec=outer[row])
+
+        # create the n_cols panel axes for this row
+        panels = [fig.add_subplot(inner[0, col]) for col in range(ncols)]
+
+        # PSTH panels for this session (place in second row)
+        panels = plot_rolling_pearsons_PSTH(nwb, channel_combos, parameters, panels)
+
+        axes_rows[row] = panels
+
+        if row == 0:
+            panels[0].set_title('All Trials: Timelocked to Go Cue')
+            panels[1].set_title('Hit trials')
+            panels[2].set_title('Miss trials')
+            panels[3].set_title('Timelocked to ITI lick bout')
+
+    # set bottom row xlabels using the last row panels
+    last_panels = axes_rows[-1]
+    if last_panels is not None:
+        last_panels[0].set_xlabel('Time (s) from Go Cue')
+        last_panels[1].set_xlabel('Time (s) from Go Cue')
+        last_panels[2].set_xlabel('Time (s) from Go Cue')
+        last_panels[3].set_xlabel('Time (s) from ITI lick bout')
+        
+
+    if loc is not None:
+        plt.savefig(f"{loc}all_sess_pearson_{subject_id}_{channel_combos}.png", bbox_inches='tight', transparent=False, dpi = 200)
+        plt.close(fig)

@@ -151,6 +151,10 @@ def run_analysis(
         if "weekly" in parameters["plot_types"]:
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope_dict[channel], channel, channel_loc, loc=plot_loc)
     
+    if "pearson" in parameters["plot_types"]:
+        for channel_pair in parameters['pearson_pairs']:
+            summary_plots.plot_all_sess_pearson(df_sess, nwbs_all, channel_pair, parameters, loc = plot_loc)
+
     if "behavior" in parameters["plot_types"]:
         logger.info("running ALL SESS behavior")
         if len(nwbs_all) > 5:
