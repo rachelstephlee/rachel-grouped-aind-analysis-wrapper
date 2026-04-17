@@ -40,7 +40,7 @@ RUN --mount=type=secret,id=git-access-token \
     zarr==2.18.6 \
     aind_hierarchical_bootstrap \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.38#egg=aind-dynamic-foraging-basic-analysis \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@v0.1.44#egg=aind-dynamic-foraging-data-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@edgecase_co_utils#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@ae433685788495d8cc63032d2a8fb67cb354190f#egg=analysis-pipeline-utils \
     -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@2e9e13e9e720ec388154f879a1255c95eb499c5b#egg=rachel-analysis-utils
 
