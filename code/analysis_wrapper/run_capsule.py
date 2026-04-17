@@ -162,7 +162,11 @@ def run_analysis(
             for nwb_batch in nwb_batches:
                 summary_plots.plot_all_sess_behavior(df_sess, nwb_batch, loc = plot_loc)
     if "avg_lastN_sess" in parameters["plot_types"]:
-        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, parameters["channels"], final_N_sess = 5, loc = plot_loc)
+        if parameters["preprocessing"] != 'raw':
+            all_channels = [ch + '_' + parameters['preprocessing'] for ch in parameters["channels"].keys()]
+        else:
+            all_channels = parameters['channels'].keys()
+        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, all_channels, parameters['channels'], final_N_sess = 5, loc = plot_loc)
 
 
     # # # DRY RUN (comment in or out)

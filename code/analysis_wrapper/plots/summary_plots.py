@@ -954,7 +954,7 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
 
 
-def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5, loc = None):
+def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N_sess = 5, loc = None):
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
 
@@ -968,7 +968,6 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5,
     subject_id = df_sess['subject_id'].unique()[0]
     
 
-    channels = list(channel_dict.keys())
     ncols = N_COLS_PER_ROW
     nrows = len(channels)
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
@@ -993,7 +992,7 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channel_dict, final_N_sess = 5,
         inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
         title_ax = fig.add_subplot(inner[0, :])
         title_ax.axis('off')
-        title_ax.set_title(f"Channel {channel} @ {channel_dict[channel]}", fontsize=16, fontweight='bold')
+        title_ax.set_title(f"Channel {channel} @ {channel_dict[channel[:3]]}", fontsize=16, fontweight='bold')
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
