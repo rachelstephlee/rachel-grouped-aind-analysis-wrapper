@@ -443,8 +443,8 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
     # hit/miss
     pf.plot_fip_psth_compare_alignments(
         nwbs, 
-        [{"hit": nwb.df_trials.query("choice < 2").goCue_start_time_in_session.values,
-        "miss": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
+        [{"hit": nwb.df_trials.query("animal_response < 2").goCue_start_time_in_session.values,
+        "miss": nwb.df_trials.query("animal_response == 2").goCue_start_time_in_session.values} for nwb in nwbs],
         channel, tw=trial_width_go, 
         extra_colors={"hit":"orange", "miss":"black"},
         censor=True, data_column=data_col,
@@ -457,7 +457,7 @@ def plot_row_panels_PSTH_extras(nwbs, channel, panels, legend_panel = False):
         nwbs, 
         [{"rew": nwb.df_trials.query("earned_reward == 1").goCue_start_time_in_session.values,
         "nrew": nwb.df_trials.query("earned_reward == 0").goCue_start_time_in_session.values,
-        "ignore": nwb.df_trials.query("choice == 2").goCue_start_time_in_session.values} for nwb in nwbs],
+        "ignore": nwb.df_trials.query("animal_response == 2").goCue_start_time_in_session.values} for nwb in nwbs],
         channel, tw=trial_width_go, 
         extra_colors={"rew":"magenta", "nrew":"grey","ignore":"black"},
         censor=True, data_column=data_col,
@@ -565,77 +565,152 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
         plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi = 200)
         plt.close(fig)
 
-def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc=None):
+def plot_rpe_summary_plot(fig, subplot_spec, panel_spec, subject_id):
+    """
+    Default top summary: two regplots of RPE slope vs date.
+    subplot_spec: SubplotSpec (e.g. outer[0]) to create a GridSpecFromSubplotSpec(1,2,...)
+    Returns list of the two axes.
+    """
+    # allow panels_spec to be None or missing rpe_slope
+    rpe_slope_df = None if panels_spec is None else panels_spec.get('rpe_slope', None)
 
-    week_intervals = sorted(df_sess['week_interval'].unique())
-    subject_id = str(df_sess['subject_id'].unique()[0])
-
-    nrows = 1 + len(week_intervals)
-    ncols = N_COLS_PER_ROW
-
-
-    fig = plt.figure(figsize=(ncols*5, nrows*4))
-    plt.suptitle(f"{subject_id} {channel_loc} ({channel})", fontsize = 16)
-
-    outer = GridSpec(nrows, 1, figure=fig)
-
-    # axes_rows will hold lists of 4 axes for each row; index 0 reserved for the top summary row (unused)
-    axes_rows = [None] * nrows
-    # --- Rows 0: Slope information
-    top_inner = GridSpecFromSubplotSpec(1, 2, subplot_spec=outer[0], hspace=0.0, wspace=0.3)
+    top_inner = GridSpecFromSubplotSpec(1, 2, subplot_spec=subplot_spec, hspace=0.0, wspace=0.3)
     top_panels = [fig.add_subplot(top_inner[0, col]) for col in range(2)]
 
+    if rpe_slope_df is None or len(rpe_slope_df) == 0:
+        # placeholder text if no data provided
+        for ax, title in zip(top_panels, ["Positive RPE regression slope", "Negative RPE regression slope"]):
+            ax.axis("off")
+            ax.text(0.5, 0.5, f"No rpe_slope data for {subject_id}", ha="center", va="center")
+        return top_panels
 
-    rpe_slope['date_num'] = rpe_slope['date'].map(pd.Timestamp.toordinal)
-    rpe_slope['month_year'] = rpe_slope['date'].dt.to_period('M')
-    month_starts = rpe_slope.groupby('month_year')['date_num'].min().values
-    month_labels = rpe_slope.groupby('month_year')['date'].min().dt.strftime('%b-%Y').values
+    rpe_local = rpe_slope_df.copy()
+    rpe_local['date_num'] = rpe_local['date'].map(pd.Timestamp.toordinal)
+    rpe_local['month_year'] = rpe_local['date'].dt.to_period('M')
+    month_starts = rpe_local.groupby('month_year')['date_num'].min().values
+    month_labels = rpe_local.groupby('month_year')['date'].min().dt.strftime('%b-%Y').values
 
     sns.regplot(
-        data=rpe_slope, 
-        x='date_num', 
-        y='slope (RPE >= 0)', 
-        scatter=True, 
-        ci=None, 
+        data=rpe_local,
+        x='date_num',
+        y='slope (RPE >= 0)',
+        scatter=True,
+        ci=None,
         line_kws={'color': 'red'},
-        # fit_reg = False,
         scatter_kws={'color': 'k'},
-        marker = '+',
-        ax = top_panels[0]
+        marker='+',
+        ax=top_panels[0]
     )
     sns.regplot(
-        data=rpe_slope, 
-        x='date_num', 
-        y='slope (RPE < 0)', 
-        scatter=True, 
-        ci=None, 
+        data=rpe_local,
+        x='date_num',
+        y='slope (RPE < 0)',
+        scatter=True,
+        ci=None,
         line_kws={'color': 'blue'},
-        # fit_reg = False,
         scatter_kws={'color': 'k'},
-        marker = '+',
-        ax = top_panels[1]
+        marker='+',
+        ax=top_panels[1]
     )
-
 
     top_panels[0].set_ylabel('Slope of positive RPE regression')
     top_panels[1].set_ylabel('Slope of negative RPE regression')
-    
-    top_panels[0].set_title(f'Positive RPE regression slope. Average slope = {rpe_slope['slope (RPE >= 0)'].mean():.4f}')
-    top_panels[1].set_title(f'Negative RPE regression slope. Average slope = {rpe_slope['slope (RPE < 0)'].mean():.4f}')
 
+    try:
+        top_panels[0].set_title(
+            "Positive RPE regression slope. Average slope = "
+            f"{rpe_local['slope (RPE >= 0)'].mean():.4f}"
+        )
+    except Exception:
+        top_panels[0].set_title("Positive RPE regression slope")
+    try:
+        top_panels[1].set_title(
+            "Negative RPE regression slope. Average slope = "
+            f"{rpe_local['slope (RPE < 0)'].mean():.4f}"
+        )
+    except Exception:
+        top_panels[1].set_title("Negative RPE regression slope")
 
     [panel.set_xlabel('Date') for panel in top_panels]
     [panel.tick_params(axis='x', labelrotation=-45) for panel in top_panels]
     [panel.set_xticks(month_starts) for panel in top_panels]
     [panel.set_xticklabels(month_labels) for panel in top_panels]
 
+    return top_panels
 
-    # --- Rows 1+: Per week interval ---
+
+def plot_weekly_grid(df_sess, nwbs_by_week, channel, channel_loc, panels_spec=None, loc=None):
+    """
+    Weekly grid with optional/top-summary function.
+
+    panels_spec (dict, optional):
+        - top_summary: bool (default True) or callable(fig, subplot_spec, rpe_slope, subject_id, channel, channel_loc)
+        - row_func: callable to draw each week row (default: plot_row_panels_RPE)
+        - xlabels: list|dict of xlabels (optional)
+        - name: optional name suffix for title/filename
+        - rpe_slope: optional DataFrame to use instead of rpe_slope argument
+    """
+    if panels_spec is None:
+        panels_spec = {}
+    # determine top-summary function presence
+    top_spec_provided = 'top_summary' in panels_spec
+    top_spec = panels_spec.get('top_summary', None)
+    # rpe_slope may be passed via panels_spec
+    rpe_slope_df = panels_spec.get('rpe_slope', None)
+
+    if top_spec_provided:
+        if callable(top_spec):
+            top_summary_func = top_spec
+        elif top_spec is True:
+            top_summary_func = plot_rpe_summary_plot
+        else:
+            top_summary_func = None
+    else:
+        # if user didn't specify top_summary but provided rpe_slope, show default
+        top_summary_func = plot_rpe_summary_plot if rpe_slope_df is not None else None
+
+    row_func = panels_spec.get('row_func', plot_row_panels_RPE)
+    plot_name = panels_spec.get('name', '')
+
+
+    week_intervals = sorted(df_sess['week_interval'].unique())
+    subject_id = str(df_sess['subject_id'].unique()[0])
+
+    top_summary_flag = top_summary_func is not None
+
+    # treat callable as truthy (will be called)
+    n_week_rows = len(week_intervals)
+    nrows = (1 if top_summary_flag else 0) + n_week_rows
+    ncols = N_COLS_PER_ROW
+
+    fig = plt.figure(figsize=(ncols * 5, max(4, nrows * 4)))
+    title_suffix = f" {plot_name}" if plot_name else ""
+    plt.suptitle(f"{subject_id} {channel_loc} ({channel}){title_suffix}", fontsize=16)
+
+    outer = GridSpec(nrows, 1, figure=fig)
+
+    # axes_rows will hold lists of panels for each week row (and optionally top summary at index 0)
+    axes_rows = [None] * nrows
+
+    # Top summary row (optional)
+    if top_summary_flag:
+        try:
+            # call top_summary_func with panels_spec so it can extract needed params
+            top_panels = top_summary_func(fig, outer[0], panels_spec, subject_id, channel, channel_loc)
+        except Exception:
+            # fallback to default if custom top_summary fails
+            try:
+                top_panels = plot_rpe_summary_plot(fig, outer[0], panels_spec, subject_id)
+            except Exception:
+                top_panels = None
+        axes_rows[0] = top_panels
+
+    # --- Rows: Per week interval ---
     for week_i, nwbs in enumerate(nwbs_by_week):
-        row = week_i + 1
+        row_idx = week_i + (1 if top_summary_flag else 0)
 
         # create a small title row above the 4 panels using a nested GridSpec
-        inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
+        inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row_idx], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
         title_ax = fig.add_subplot(inner[0, :])
         title_ax.axis('off')
         nwb_dates = str(nwbs)[1:-1].replace(subject_id + '_', '')
@@ -644,28 +719,33 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels_RPE(nwbs, channel, panels)
-        axes_rows[row] = panels
+        # use provided row_func to populate panels
+        panels = row_func(nwbs, channel, panels)
+        axes_rows[row_idx] = panels
 
-
-    # set bottom row xlabels using the last row panels
-    last_panels = axes_rows[-1]
+    # set bottom row xlabels using the last non-None panels
+    last_panels = next((p for p in reversed(axes_rows) if p is not None), None)
     if last_panels is not None:
-        last_panels[2].set_xlabel('num_reward_past')
-        last_panels[0].set_xlabel('Time (s) from choice')
-        last_panels[1].set_xlabel('Time (s) from choice')
-        last_panels[3].set_xlabel('Time (s) from choice')
+        labels = ['Time (s) from choice', 'Time (s) from choice', 'num_reward_past', 'Time (s) from choice', 'Time (s) from choice']
+        for idx, lbl in enumerate(labels):
+            if idx < len(last_panels):
+                last_panels[idx].set_xlabel(lbl)
 
-    # show legends on the first data row (row index 1) if it exists
-    if nrows > 1 and axes_rows[1] is not None:
+    # show legends on the first data row (first week row) if it exists
+    first_week_row_idx = (1 if top_summary_flag else 0)
+    if nrows > 0 and len(axes_rows) > first_week_row_idx and axes_rows[first_week_row_idx] is not None:
         for (col, legend_title) in zip([0, 1, 3], ['choice', 'RPE', 'RPE']):
-            axes_rows[1][col].legend(framealpha=0.5, title = legend_title, fontsize='small')
+            try:
+                axes_rows[first_week_row_idx][col].legend(framealpha=0.5, title=legend_title, fontsize='small')
+            except Exception:
+                pass
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    if loc is not None:
-        plt.savefig(f"{loc}weekly_{subject_id}_{channel}.png" )
-        plt.close()
 
+    if loc is not None:
+        safe_name = str(plot_name).replace(" ", "_") if plot_name else "weekly"
+        plt.savefig(f"{loc}weekly_{subject_id}_{channel}_{safe_name}.png")
+        plt.close()
 
 def plot_row_panels_PSTH_legends(df_trials_all, panels):
     """
@@ -953,8 +1033,7 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
         plt.close(fig)
 
 
-
-def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N_sess = 5, loc = None):
+def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N_sess = 5, panels_spec=None, loc = None):
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
 
@@ -976,8 +1055,22 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N
     
     nwb_dates = str(nwbs)[1:-1].replace(subject_id + '_', '')
 
+    # panels_spec: dict with optional keys 'row_func', 'xlabels', 'name'
+    if panels_spec is None:
+        panels_spec = {}
+    row_func = panels_spec.get('row_func', plot_row_panels_RPE)
+    # default xlabels: list of length ncols (falls back to empty strings if shorter)
+    default_xlabels = ['Time (s) from choice', 'Time (s) from choice', 'num_reward_past', 'Time (s) from choice', 'Time (s) from choice']
+    xlabels = panels_spec.get('xlabels', default_xlabels)
+    # allow dict mapping col->label or list
+    if isinstance(xlabels, dict):
+        xlabels_map = xlabels
+    else:
+        xlabels_map = {i: (xlabels[i] if i < len(xlabels) else "") for i in range(ncols)}
+    plot_name = panels_spec.get('name', f"Final {final_N_sess} Sessions Summary Figs")
+
     fig = plt.figure(figsize=(ncols*5, nrows*4))
-    plt.suptitle(f"{subject_id} Final {final_N_sess} Sessions Summary Figs" + 
+    plt.suptitle(f"{subject_id} {plot_name}" + 
                     f"\n ({nwb_dates})", fontsize = 16)
 
     outer = GridSpec(nrows, 1, figure=fig)
@@ -997,26 +1090,33 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels_RPE(nwbs, channel, panels)
+        # call the provided row plotting function (must follow signature row_func(nwbs, channel, panels))
+        panels = row_func(nwbs, channel, panels)
         axes_rows[row] = panels
 
 
     # set bottom row xlabels using the last row panels
     last_panels = axes_rows[-1]
     if last_panels is not None:
-        last_panels[2].set_xlabel('num_reward_past')
-        last_panels[0].set_xlabel('Time (s) from choice')
-        last_panels[1].set_xlabel('Time (s) from choice')
-        last_panels[-1].set_xlabel('Time (s) from choice')
+        for col_idx, label in xlabels_map.items():
+            if 0 <= col_idx < len(last_panels):
+                last_panels[col_idx].set_xlabel(label)
 
     # show legends on the first data row (row index 1) if it exists
-    for (col, legend_title) in zip([0, 1, 3], ['choice', 'RPE', 'RPE']):
-        axes_rows[0][col].legend(framealpha=0.5, title = legend_title, fontsize='small')
+    try:
+        for (col, legend_title) in zip([0, 1, 3], ['choice', 'RPE', 'RPE']):
+            axes_rows[0][col].legend(framealpha=0.5, title = legend_title, fontsize='small')
+    except Exception:
+        # if the custom row_func did not produce legends or axes, ignore
+        pass
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}avg_signal_{subject_id}_{channel}.png",bbox_inches='tight',transparent = False, dpi = 1000)
+        # sanitize plot_name for filename
+        safe_name = str(plot_name).replace(" ", "_")
+        plt.savefig(f"{loc}avg_signal_{subject_id}_{safe_name}_{final_N_sess}sessions.png",bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
+
 def set_bar_percentages(ax, df, x_col, hue_col):
     """
     Set bar heights to percent within each hue for a seaborn countplot.
