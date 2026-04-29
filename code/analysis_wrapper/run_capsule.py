@@ -149,7 +149,10 @@ def run_analysis(
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
 
         if "weekly" in parameters["plot_types"]:
-            summary_plots.plot_weekly_grid(df_sess, nwbs_by_week,combined_rpe_slope[combined_rpe_slope['channel'] == channel], channel, channel_loc, loc=plot_loc)
+            panels_spec = {'rpe_slope':combined_rpe_slope[combined_rpe_slope['channel'] == channel],
+                            'top_summary': summary_plots.plot_rpe_summary_plot,
+                            'row_func':summary_plots.plot_row_panels_RPE}
+            summary_plots.plot_weekly_grid(df_sess, nwbs_by_week, channel, channel_loc, panels_spec = panels_spec, loc=plot_loc)
     
     if "pearson" in parameters["plot_types"]:
         for channel_pair in parameters['pearson_pairs']:

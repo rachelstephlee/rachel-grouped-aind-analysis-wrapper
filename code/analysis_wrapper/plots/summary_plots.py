@@ -565,7 +565,7 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
         plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi = 200)
         plt.close(fig)
 
-def plot_rpe_summary_plot(fig, subplot_spec, panel_spec, subject_id):
+def plot_rpe_summary_plot(fig, subplot_spec, panels_spec, subject_id):
     """
     Default top summary: two regplots of RPE slope vs date.
     subplot_spec: SubplotSpec (e.g. outer[0]) to create a GridSpecFromSubplotSpec(1,2,...)
@@ -661,8 +661,6 @@ def plot_weekly_grid(df_sess, nwbs_by_week, channel, channel_loc, panels_spec=No
     if top_spec_provided:
         if callable(top_spec):
             top_summary_func = top_spec
-        elif top_spec is True:
-            top_summary_func = plot_rpe_summary_plot
         else:
             top_summary_func = None
     else:
@@ -676,7 +674,6 @@ def plot_weekly_grid(df_sess, nwbs_by_week, channel, channel_loc, panels_spec=No
     week_intervals = sorted(df_sess['week_interval'].unique())
     subject_id = str(df_sess['subject_id'].unique()[0])
 
-    top_summary_flag = top_summary_func is not None
 
     # treat callable as truthy (will be called)
     n_week_rows = len(week_intervals)
@@ -693,10 +690,10 @@ def plot_weekly_grid(df_sess, nwbs_by_week, channel, channel_loc, panels_spec=No
     axes_rows = [None] * nrows
 
     # Top summary row (optional)
-    if top_summary_flag:
+    if top_spec_provided:
         try:
             # call top_summary_func with panels_spec so it can extract needed params
-            top_panels = top_summary_func(fig, outer[0], panels_spec, subject_id, channel, channel_loc)
+            top_panels = top_summary_func(fig, outer[0], panels_spec, subject_id)
         except Exception:
             # fallback to default if custom top_summary fails
             try:
