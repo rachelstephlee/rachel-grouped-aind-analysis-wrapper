@@ -718,16 +718,22 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels_RPE(nwbs, channel, panels)
+        plot_row_panels_PSTH(nwbs, channel, panels, legend_panel=False)
+        # plot_row_panels_RPE(nwbs, channel, panels)
         axes_rows[row] = panels
 
 
     # set bottom row xlabels using the last row panels
     last_panels = axes_rows[-1]
     if last_panels is not None:
-        last_panels[2].set_xlabel('num_reward_past')
+        # last_panels[2].set_xlabel('num_reward_past')
+        # last_panels[0].set_xlabel('Time (s) from choice')
+        # last_panels[1].set_xlabel('Time (s) from choice')
+        # last_panels[3].set_xlabel('Time (s) from choice')
+        last_panels[-1].set_xlabel('Consecutive No-Reward and Reward Trials')
         last_panels[0].set_xlabel('Time (s) from choice')
         last_panels[1].set_xlabel('Time (s) from choice')
+        last_panels[2].set_xlabel('Time (s) from choice')
         last_panels[3].set_xlabel('Time (s) from choice')
 
     # show legends on the first data row (row index 1) if it exists
@@ -1068,17 +1074,24 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
 
-        panels = plot_row_panels_RPE(nwbs, channel, panels)
+        # panels = plot_row_panels_RPE(nwbs, channel, panels)
+        plot_row_panels_PSTH(nwbs, channel, panels, legend_panel=False)
+
         axes_rows[row] = panels
 
 
     # set bottom row xlabels using the last row panels
     last_panels = axes_rows[-1]
     if last_panels is not None:
-        last_panels[2].set_xlabel('num_reward_past')
+        # last_panels[2].set_xlabel('num_reward_past')
+        # last_panels[0].set_xlabel('Time (s) from choice')
+        # last_panels[1].set_xlabel('Time (s) from choice')
+        # last_panels[-1].set_xlabel('Time (s) from choice')
+        last_panels[-1].set_xlabel('Consecutive No-Reward and Reward Trials')
         last_panels[0].set_xlabel('Time (s) from choice')
         last_panels[1].set_xlabel('Time (s) from choice')
-        last_panels[-1].set_xlabel('Time (s) from choice')
+        last_panels[2].set_xlabel('Time (s) from choice')
+        last_panels[3].set_xlabel('Time (s) from choice')
 
     # show legends on the first data row (row index 1) if it exists
     for (col, legend_title) in zip([0, 1, 3], ['choice', 'RPE', 'RPE']):
