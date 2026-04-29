@@ -1492,6 +1492,7 @@ def plot_rolling_pearsons_PSTH(nwb, channel_combos, parameters, panels):
     panels[-1].axis("off")
     proxies = [Line2D([0], [0], color=colors[i], lw=2) for i in range(len(legend_labels))]
     panels[-1].legend(proxies, legend_labels, frameon=False, loc="center", fontsize="small")
+    panels[-1].set_title(f"{nwb}", fontsize=16, fontweight='bold')
 
     return panels
 def nwb_has_pearson(nwb_obj, channel_combos):
@@ -1518,7 +1519,6 @@ def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=Non
     # use constrained_layout to avoid tight_layout warnings with complex nested axes
     fig = plt.figure(figsize=(ncols * 5, nrows*4), constrained_layout=True)
     gs = GridSpec(nrows=nrows, ncols=ncols, figure=fig, width_ratios=[1, 1, 1, 1, 0.25], hspace=0.3, wspace=0.4)
-
     plt.suptitle(f"{subject_id} {channel_combos[0]} ({parameters['channels'][channel_combos[0]]}) +" + 
                     f"{channel_combos[1]} ({parameters['channels'][channel_combos[1]]})", fontsize=16)
 
@@ -1530,7 +1530,8 @@ def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=Non
     for row, nwb in enumerate(nwbs_all):
         # create a small title row above the 4 panels using a nested GridSpec
         inner = GridSpecFromSubplotSpec(1, ncols, subplot_spec=outer[row])
-
+        
+        
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[0, col]) for col in range(ncols)]
         if not nwb_has_pearson(nwb, channel_combos):
