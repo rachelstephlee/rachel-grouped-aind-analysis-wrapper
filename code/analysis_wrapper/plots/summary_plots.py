@@ -369,7 +369,7 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
-        if channel not in nwb.df_fip.event:
+        if channel not in nwb.df_fip.event.unique():
             continue
         # PSTH panels for this session (place in second row)
         plot_row_panels_left_right_RPE(nwb, channel, panels, offsets)
@@ -548,7 +548,7 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
         # PSTH panels for this session (place in second row)
         first_ax = fig.add_subplot(inner[1, 0])
         psth_axes = [fig.add_subplot(inner[1, col],sharey = first_ax) for col in range(ncols)]
-        if channel not in nwb.df_fip.event:
+        if channel not in nwb.df_fip.event.unique():
             continue
         plot_row_panels_PSTH_extras([nwb], channel, psth_axes, legend_panel=False)
 
@@ -1015,7 +1015,7 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
         # PSTH panels for this session (place in second row)
         psth_axes = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
-        if channel not in nwb.df_fip.event:
+        if channel not in nwb.df_fip.event.unique():
             continue
         plot_row_panels_PSTH([nwb], channel, psth_axes, legend_panel=False)
 
@@ -1293,7 +1293,7 @@ def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
-        if channel not in nwb.df_fip.event:
+        if channel not in nwb.df_fip.event.unique():
             continue
         panels = plot_row_panels_RPE([nwb], channel, panels)
         axes_rows[row] = panels
