@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-
+import glob
 
 
 import sys
@@ -46,6 +46,32 @@ def validate_pearsonr(parameters):
 
     return parameters  
 
+def get_data_curation(curation_file):
+    if len(curation_file): 
+        json_path = glob.glob(pathname=f"/src/rachel-analysis-utils/src/rachel_analysis_utils/data_curation/{curation_file}.json")[0]
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, "r") as fh:
+                    df_curation = json.load(fh)
+                    return df_curation
+            except Exception:
+                logger.exception(f"Failed to load data curation json at {json_path}")
+                return None
+        else:
+            logger.warning(f"No data curation json found at {json_path}. Continuing without df_curation.")
+            return None
+    else:
+        return None
+
+def get_all_channels(parameters, ch_suffix, df_curation):
+    all_channels = [ch + ch_suffix for ch in parameters['channels'].keys()]
+    channel_locs = [parameters['channels'][ch] for ch in parameters['channels'].keys()]
+    if df_curation is not None:
+        all_channels = [df_curation['correct_mapping'][ch] for ch in parameters['channels'].keys()]
+        channel_locs = ['' for ch in all_channels]
+
+    return all_channels, channel_locs
+
 def run_analysis(
     analysis_dispatch_inputs: AnalysisDispatchModel,
     **parameters,
@@ -79,42 +105,62 @@ def run_analysis(
 
     [Path(f"/results/data/{subject_id}").mkdir(parents=True, exist_ok=True) for subject_id in df_sess['subject_id'].unique()]
 
-    
-    if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"] or "rpe_no_plots" in parameters["plot_types"] or "weekly" in parameters["plot_types"]:
-        offsets = [0.33,1]
-        (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, parameters, 
-                                                data_column = "data_norm", offsets = offsets)
-
     parameters = validate_pearsonr(parameters)
 
     nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
+    ch_suffix = '' if (parameters['preprocessing'] == 'raw') else f"_{parameters['preprocessing']}"
+
+    df_curation = get_data_curation(parameters['data_curation_file'])
+    if df_curation is not None:
+        (nwbs_all, nwbs_all_curated) = r_utils.apply_curation_nwb_list(nwbs_all, df_curation, drop_borderline = parameters['drop_borderline_data_curation'])
+        if parameters['drop_borderline_data_curation']:
+            nwbs_all = nwbs_all_curated
+        
+        for nwb in nwbs_all:
+            df_fip = nwb.df_fip
+            nwb.df_fip = df_fip.rename(columns={"event": "channel", "intended_measurement": "event"})
+        nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
 
     for pair in parameters['pearson_pairs']:
-        if parameters['preprocessing'] != 'raw':
-            signal1 = pair[0] +  '_' + parameters['preprocessing']
-            signal2 = pair[1] +  '_' + parameters['preprocessing']
-        else:
-            signal1, signal2 = pair[0], pair[1]
+        
+        signal1 = f"{pair[0]}{ch_suffix}"
+        signal2 = f"{pair[1]}{ch_suffix}"
+        if df_curation is not None:
+            signal1 = df_curation['correct_mapping'][pair[0]]
+            signal2 = df_curation['correct_mapping'][pair[1]]
+
         nwbs_all = [analysis_utils.add_sliding_window_corr(
                     nwb,
                     signal1name=signal1,
                     signal2name=signal2,
                 ) for nwb in nwbs_all]
 
+        # TODO: FIX THIS HERE ALSO
+    if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"] \
+            or "rpe_no_plots" in parameters["plot_types"] or "weekly" in parameters["plot_types"]:
+        offsets = [0.33,1]
+        all_channels, _ = get_all_channels(parameters, ch_suffix, df_curation)
+        (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, all_channels,
+                                                parameters["save_dfs"], data_column="data_norm", offsets=offsets)
+
     ############## SAVE OR PREPARE PLOT_LOC ##############
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
     if parameters["save_dfs"] == True:
-        r_utils.save_nwb_list(nwbs_by_week, '/results/data/', df_sess)
+        r_utils.save_nwb_list(nwbs_all, '/results/data/', df_sess)
 
         
 
     ############## RUN ANALYSIS ##############
 
     for channel, channel_loc in parameters['channels'].items():
-        if parameters['preprocessing'] != 'raw':
-            channel = channel +  '_' + parameters['preprocessing']
+        if parameters['preprocessing'] != 'raw' and df_curation is None:
+            channel = f"{channel}{ch_suffix}"
+
+        if df_curation is not None:
+            channel = df_curation['correct_mapping'][channel]
+            channel_loc = ''
 
         if "all_sess" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH")
@@ -149,10 +195,15 @@ def run_analysis(
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
 
         if "weekly" in parameters["plot_types"]:
+            logger.info("running weekly plots")
+
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week,combined_rpe_slope[combined_rpe_slope['channel'] == channel], channel, channel_loc, loc=plot_loc)
     
+    # TODO: FIX THIS WITH DATA CURATION
     if "pearson" in parameters["plot_types"]:
         for channel_pair in parameters['pearson_pairs']:
+            # channel_pair = [f"{channel}{ch_suffix}" for channel in channel_pair]
+            # send in channel_pair_locs depending on data_curation (if data curation, channel_pair_locs = channel_pairs)
             summary_plots.plot_all_sess_pearson(df_sess, nwbs_all, channel_pair, parameters, loc = plot_loc)
 
     if "behavior" in parameters["plot_types"]:
@@ -162,11 +213,9 @@ def run_analysis(
             for nwb_batch in nwb_batches:
                 summary_plots.plot_all_sess_behavior(df_sess, nwb_batch, loc = plot_loc)
     if "avg_lastN_sess" in parameters["plot_types"]:
-        if parameters["preprocessing"] != 'raw':
-            all_channels = [ch + '_' + parameters['preprocessing'] for ch in parameters["channels"].keys()]
-        else:
-            all_channels = parameters['channels'].keys()
-        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, all_channels, parameters['channels'], final_N_sess = 5, loc = plot_loc)
+        logger.info("running average last N sessions")
+        all_channels, channel_locs = get_all_channels(parameters, ch_suffix, df_curation)
+        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, all_channels, channel_locs, final_N_sess = parameters["last_N_sess"], loc = plot_loc)
 
 
     # # # DRY RUN (comment in or out)

@@ -369,7 +369,8 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
-
+        if channel not in nwb.df_fip.event:
+            continue
         # PSTH panels for this session (place in second row)
         plot_row_panels_left_right_RPE(nwb, channel, panels, offsets)
 
@@ -547,6 +548,8 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
         # PSTH panels for this session (place in second row)
         first_ax = fig.add_subplot(inner[1, 0])
         psth_axes = [fig.add_subplot(inner[1, col],sharey = first_ax) for col in range(ncols)]
+        if channel not in nwb.df_fip.event:
+            continue
         plot_row_panels_PSTH_extras([nwb], channel, psth_axes, legend_panel=False)
 
         axes_rows[row] = psth_axes
@@ -1012,6 +1015,8 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
         # PSTH panels for this session (place in second row)
         psth_axes = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
+        if channel not in nwb.df_fip.event:
+            continue
         plot_row_panels_PSTH([nwb], channel, psth_axes, legend_panel=False)
 
         axes_rows[row] = psth_axes
@@ -1031,7 +1036,7 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
         plt.savefig(f"{loc}all_sess_PSTH_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi=300)
         plt.close(fig)
 
-def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N_sess = 5, loc = None):
+def plot_avg_final_N_sess(df_sess, nwbs_all, channels, channel_locs, final_N_sess = 5, loc = None):
     # set pdf plot requirements
     mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
 
@@ -1047,7 +1052,6 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N
 
     ncols = N_COLS_PER_ROW
     nrows = len(channels)
-    nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
     nwbs = nwbs_all[-final_N_sess:]
     
     
@@ -1069,7 +1073,7 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N
         inner = GridSpecFromSubplotSpec(2, ncols, subplot_spec=outer[row], height_ratios=[0.12, 0.88], hspace=0.0, wspace=0.3)
         title_ax = fig.add_subplot(inner[0, :])
         title_ax.axis('off')
-        title_ax.set_title(f"Channel {channel} @ {channel_dict[channel[:3]]}", fontsize=16, fontweight='bold')
+        title_ax.set_title(f"Channel {channel} @ {channel_locs[row]}", fontsize=16, fontweight='bold')
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
@@ -1099,7 +1103,7 @@ def plot_avg_final_N_sess(df_sess, nwbs_by_week, channels, channel_dict, final_N
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}avg_signal_{subject_id}_{channel}.png",bbox_inches='tight',transparent = False, dpi = 1000)
+        plt.savefig(f"{loc}avg_signal_{subject_id}.png",bbox_inches='tight',transparent = False, dpi = 1000)
         plt.close()
 
 def set_bar_percentages(ax, df, x_col, hue_col):
@@ -1289,7 +1293,8 @@ def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
         # create the n_cols panel axes for this row
         panels = [fig.add_subplot(inner[1, col]) for col in range(ncols)]
-
+        if channel not in nwb.df_fip.event:
+            continue
         panels = plot_row_panels_RPE([nwb], channel, panels)
         axes_rows[row] = panels
 
@@ -1487,6 +1492,7 @@ def nwb_has_pearson(nwb_obj, channel_combos):
     evs = nwb_obj.df_fip['event'].astype(str).unique()
     return pearson_event_name in evs
 
+#TODO: fix the channel_combos and parameters! 
 def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=None):
     """
     PSTH-focused version of plot_all_sess.
