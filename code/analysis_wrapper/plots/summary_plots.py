@@ -173,14 +173,14 @@ def plot_row_panels_RPE(nwbs, channel, panels):
         error_type = 'sem'
         data_col = 'data'
     
-    # 1. Choice L vs R
+    # 1. Rew/NRew
     pf.plot_fip_psth_compare_alignments(
             nwbs,
-            [{"left": nwb.df_trials.query("animal_response == 0").choice_time_in_session.values,
-              "right": nwb.df_trials.query("animal_response == 1").choice_time_in_session.values} for nwb in nwbs],
+                    [{"rew": nwb.df_trials.query("earned_reward == 1").choice_time_in_session.values,
+        "nrew": nwb.df_trials.query("earned_reward == 0").choice_time_in_session.values} for nwb in nwbs],
             channel,
             tw=trial_width_choice,
-            extra_colors={"left": 'b', "right": 'r'},
+            extra_colors={"rew":"magenta", "nrew":"grey"},
             data_column=data_col,
             error_type=error_type,
             ax=panels[0],
