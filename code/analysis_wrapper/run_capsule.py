@@ -95,7 +95,8 @@ def run_analysis(
 
     df_trials = analysis_utils.enrich_df_trials(df_trials)
 
-    (df_sess, nwbs_by_week) = r_utils.get_dummy_nwbs_by_week(df_sess, df_trials, df_events, df_fip) 
+    nwbs_all = r_utils.get_dummy_nwbs(df_trials, df_events, df_fip) 
+    ch_suffix = '' if (parameters['preprocessing'] == 'raw') else f"_{parameters['preprocessing']}"
 
     # plot summary plots
     if dry_run:
@@ -107,8 +108,6 @@ def run_analysis(
 
     parameters = validate_pearsonr(parameters)
 
-    nwbs_all = [nwb for nwb_week in nwbs_by_week for nwb in nwb_week]
-    ch_suffix = '' if (parameters['preprocessing'] == 'raw') else f"_{parameters['preprocessing']}"
 
     df_curation = get_data_curation(parameters['data_curation_file'])
     if df_curation is not None:
@@ -118,8 +117,7 @@ def run_analysis(
         
         for nwb in nwbs_all:
             df_fip = nwb.df_fip
-            nwb.df_fip = df_fip.rename(columns={"event": "channel", "intended_measurement": "event"})
-        nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
+            nwb.df_fip = df_fip.rename(columns={"event": "fiber", "intended_measurement": "event"})
 
     for pair in parameters['pearson_pairs']:
         
@@ -140,8 +138,10 @@ def run_analysis(
             or "rpe_no_plots" in parameters["plot_types"] or "weekly" in parameters["plot_types"]:
         offsets = [0.33,1]
         all_channels, _ = get_all_channels(parameters, ch_suffix, df_curation)
+        nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
         (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, all_channels,
                                                 parameters["save_dfs"], data_column="data_norm", offsets=offsets)
+        nwbs_all = [nwb for week in nwbs_by_week for nwb in week]
 
     ############## SAVE OR PREPARE PLOT_LOC ##############
     if not os.path.exists(plot_loc):
@@ -149,8 +149,6 @@ def run_analysis(
 
     if parameters["save_dfs"] == True:
         r_utils.save_nwb_list(nwbs_all, '/results/data/', df_sess)
-
-        
 
     ############## RUN ANALYSIS ##############
 
@@ -215,7 +213,7 @@ def run_analysis(
     if "avg_lastN_sess" in parameters["plot_types"]:
         logger.info("running average last N sessions")
         all_channels, channel_locs = get_all_channels(parameters, ch_suffix, df_curation)
-        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_by_week, all_channels, channel_locs, final_N_sess = parameters["last_N_sess"], loc = plot_loc)
+        summary_plots.plot_avg_final_N_sess(df_sess, nwbs_all, all_channels, channel_locs, final_N_sess = parameters["last_N_sess"], loc = plot_loc)
 
 
     # # # DRY RUN (comment in or out)
