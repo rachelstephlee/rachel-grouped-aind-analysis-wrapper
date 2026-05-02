@@ -169,9 +169,11 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     if len(nwbs) > 1:
         error_type = 'sem_over_sessions'
         data_col = 'data_z'
+        z_score_text_suffix = 'z-scored '
     else:
         error_type = 'sem'
         data_col = 'data'
+        z_score_text_suffix = ''
     
     # 1. Rew/NRew
     pf.plot_fip_psth_compare_alignments(
@@ -200,43 +202,47 @@ def plot_row_panels_RPE(nwbs, channel, panels):
         )
 
     # 3. Baseline by num_reward_past (grand mean/SE)
-    df_trials_all = df_trials_all.query(
-        'num_reward_past > -7 and num_reward_past < 7'
-    ).sort_values('trial')
-    if len(nwbs) > 1:
-        grouped = (
-                df_trials_all
-                .groupby(['ses_idx', 'num_reward_past'])[f'{data_col}_{channel}_baseline']
-                .mean()
-                .reset_index()
+    # TODO: may need to test this for baseline activity where some sessions have data, others have nan.
+    # groupby should drop nan values.
+    baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
+    if baseline_col_name in df_trials_all:
+        df_trials_all = df_trials_all.query(
+            'num_reward_past > -7 and num_reward_past < 7'
+        ).sort_values('trial')
+        if len(nwbs) > 1:
+            grouped = (
+                    df_trials_all
+                    .groupby(['ses_idx', 'num_reward_past'])[baseline_col_name]
+                    .mean()
+                    .reset_index()
+                )
+            agg = (
+                    grouped
+                    .groupby('num_reward_past')[baseline_col_name]
+                    .agg(['mean', 'sem'])
+                    .reset_index()
+                )
+            panels[2].bar(
+                    agg['num_reward_past'],
+                    agg['mean'],
+                    yerr=agg['sem'],
+                    color=sns.color_palette('vlag', len(agg)),
+                    capsize=4,
             )
-        agg = (
-                grouped
-                .groupby('num_reward_past')[f'{data_col}_{channel}_baseline']
-                .agg(['mean', 'sem'])
-                .reset_index()
-            )
-        panels[2].bar(
-                agg['num_reward_past'],
-                agg['mean'],
-                yerr=agg['sem'],
-                color=sns.color_palette('vlag', len(agg)),
-                capsize=4,
-        )
-        panels[2].set_ylabel(f'{data_col}_baseline')
-    else:
-        sns.barplot(
-                x='num_reward_past',
-                y=f'{data_col}_{channel}_baseline',
-                data=df_trials_all,
-                palette='vlag',
-                hue='num_reward_past',
-                errorbar='se',
-                dodge=False,
-                legend=False,
-                ax=panels[2]
-            )
-    panels[2].set_title('Baseline of z-scored df/f')
+            panels[2].set_ylabel(f'{data_col}_baseline')
+        else:
+            sns.barplot(
+                    x='num_reward_past',
+                    y=baseline_col_name,
+                    data=df_trials_all,
+                    palette='vlag',
+                    hue='num_reward_past',
+                    errorbar='se',
+                    dodge=False,
+                    legend=False,
+                    ax=panels[2]
+                )
+        panels[2].set_title(f'Baseline of {z_score_text_suffix}df/f')
 
     # 4 RPE_binned_3 with baseline removed
     pf.plot_fip_psth_compare_alignments(
@@ -244,10 +250,10 @@ def plot_row_panels_RPE(nwbs, channel, panels):
             extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
             tw=trial_width_choice, censor=True, data_column=f"{data_col}_norm", error_type=error_type, ax=panels[3]
         )
-    panels[3].set_ylabel('z-scored df/f \n (baseline removed)')
+    panels[3].set_ylabel(f'{z_score_text_suffix}df/f \n (baseline removed)')
 
     # 5. Add the RPE vs avg signal
-    avg_signal_cols = [c for c in df_trials_all.columns if c.startswith("avg_data") and channel[:3] in c]
+    avg_signal_cols = [c for c in df_trials_all.columns if c.startswith("avg_data") and channel.split("_dff")[0] in c]
 
     if len(avg_signal_cols) != 1:
         print("incorrect number of avg_signal_col found, skipping RPE vs avg signal plot")
@@ -292,36 +298,38 @@ def plot_row_panels_left_right_RPE(nwb_split, channel, panels, offsets):
         panels[i*3 + i].set_title("")
 
         # BASELINE
+        baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
+        if baseline_col_name in df_trials_ch:
 
-        df_trials_ch = df_trials_ch.query(
-            'num_reward_past > -7 and num_reward_past < 7'
-        ).sort_values('trial')
+            df_trials_ch = df_trials_ch.query(
+                'num_reward_past > -7 and num_reward_past < 7'
+            ).sort_values('trial')
 
-        sns.barplot(
-            x='num_reward_past',
-            y=f'{data_col}_{channel}_baseline',
-            data=df_trials_ch,
-            palette='vlag',
-            hue='num_reward_past',
-            errorbar='se',
-            dodge=False,
-            legend=False,
-            ax=panels[i*3 + i + 1]
-        )
-        panels[i*3 + i + 1].set_title("LEFT TRIALS" if i == 0 else "RIGHT TRIALS")
-
-        # RPE with baseline removed
-        pf.plot_fip_psth_compare_alignments(
-                nwb_split, RPE_binned3_dfs_dicts, channel,
-                extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
-                tw=trial_width_choice, censor=True, data_column=data_col+'_norm', error_type=error_type, ax=panels[i * 3 + i + 2]
+            sns.barplot(
+                x='num_reward_past',
+                y=baseline_col_name,
+                data=df_trials_ch,
+                palette='vlag',
+                hue='num_reward_past',
+                errorbar='se',
+                dodge=False,
+                legend=False,
+                ax=panels[i*3 + i + 1]
             )
-        panels[i * 3 + i + 2].set_title("")
+            panels[i*3 + i + 1].set_title("LEFT TRIALS" if i == 0 else "RIGHT TRIALS")
 
-        panels[i * 3 + i + 2].fill_betweenx([0, 0.01], offsets[0], offsets[1], color = 'gray', alpha = 0.3 )
+            # RPE with baseline removed
+            pf.plot_fip_psth_compare_alignments(
+                    nwb_split, RPE_binned3_dfs_dicts, channel,
+                    extra_colors=dict(zip(RPE_binned3_label_names, sns.color_palette("mako", len(RPE_binned3_label_names)).as_hex())),
+                    tw=trial_width_choice, censor=True, data_column=data_col+'_norm', error_type=error_type, ax=panels[i * 3 + i + 2]
+                )
+            panels[i * 3 + i + 2].set_title("")
+
+            panels[i * 3 + i + 2].fill_betweenx([0, 0.01], offsets[0], offsets[1], color = 'gray', alpha = 0.3 )
 
         # average signals
-        avg_signal_cols = [c for c in df_trials_ch.columns if c.startswith("avg_data") and channel[:3] in c]
+        avg_signal_cols = [c for c in df_trials_ch.columns if c.startswith("avg_data") and channel.split('_dff')[0] in c]
 
         if len(avg_signal_cols) != 1:
             print("incorrect number of avg_signal_col found, skipping RPE vs avg signal plot")
@@ -857,9 +865,11 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     if len(nwbs) > 1:
         error_type = 'sem_over_sessions'
         data_col = 'data_z'
+        z_score_text_suffix = 'z-scored '
     else:
         error_type = 'sem'
         data_col = 'data'
+        z_score_text_suffix = ''
     
     # 1. Choice L vs R
     pf.plot_fip_psth_compare_alignments(
@@ -914,43 +924,46 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
 
 
     # 5. Baseline by num_reward_past (grand mean/SE)
-    df_trials_all = df_trials_all.query(
-        'num_reward_past > -7 and num_reward_past < 7'
-    ).sort_values('trial')
-    if len(nwbs) > 1:
-        grouped = (
-                df_trials_all
-                .groupby(['ses_idx', 'num_reward_past'])[f'{data_col}_{channel}_baseline']
-                .mean()
-                .reset_index()
+    baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
+    if baseline_col_name in df_trials_all:
+
+        df_trials_all = df_trials_all.query(
+            'num_reward_past > -7 and num_reward_past < 7'
+        ).sort_values('trial')
+        if len(nwbs) > 1:
+            grouped = (
+                    df_trials_all
+                    .groupby(['ses_idx', 'num_reward_past'])[baseline_col_name]
+                    .mean()
+                    .reset_index()
+                )
+            agg = (
+                    grouped
+                    .groupby('num_reward_past')[baseline_col_name]
+                    .agg(['mean', 'sem'])
+                    .reset_index()
+                )
+            panels[4].bar(
+                    agg['num_reward_past'],
+                    agg['mean'],
+                    yerr=agg['sem'],
+                    color=sns.color_palette('vlag', len(agg)),
+                    capsize=4,
             )
-        agg = (
-                grouped
-                .groupby('num_reward_past')[f'{data_col}_{channel}_baseline']
-                .agg(['mean', 'sem'])
-                .reset_index()
-            )
-        panels[4].bar(
-                agg['num_reward_past'],
-                agg['mean'],
-                yerr=agg['sem'],
-                color=sns.color_palette('vlag', len(agg)),
-                capsize=4,
-        )
-        panels[4].set_ylabel(f'{data_col}_baseline')
-    else:
-        sns.barplot(
-                x='num_reward_past',
-                y=f'{data_col}_{channel}_baseline',
-                data=df_trials_all,
-                palette='vlag',
-                hue='num_reward_past',
-                errorbar='se',
-                dodge=False,
-                legend=False,
-                ax=panels[4]
-            )
-    panels[4].set_title('Baseline of z-scored df/f')
+            panels[4].set_ylabel(f'{data_col}_baseline')
+        else:
+            sns.barplot(
+                    x='num_reward_past',
+                    y=baseline_col_name,
+                    data=df_trials_all,
+                    palette='vlag',
+                    hue='num_reward_past',
+                    errorbar='se',
+                    dodge=False,
+                    legend=False,
+                    ax=panels[4]
+                )
+        panels[4].set_title(f'Baseline of {z_score_text_suffix}df/f')
 
     
     for ax in panels:
