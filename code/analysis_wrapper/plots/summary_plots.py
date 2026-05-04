@@ -432,7 +432,7 @@ def plot_row_panels_PSTH_extras_legends(panels):
     # proxy artists (empty) — we'll color the legend text via labelcolor
     handles = [Line2D([], [], linestyle='', marker='') for _ in stay_switch_colors]
     panels[3].axis('off')
-    panels[3].legend(handles, stay_switch_labels, title='stay/switch', ncol=1, loc='center', frameon=False, labelcolor=stay_switch_colors)
+    panels[3].legend(handles, stay_switch_labels, title='switch/stay', ncol=1, loc='center', frameon=False, labelcolor=stay_switch_colors)
 
     return panels
 
