@@ -206,12 +206,12 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     # groupby should drop nan values.
     baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
     if baseline_col_name in df_trials_all:
-        df_trials_all = df_trials_all.query(
+        df_trials_all_baseline = df_trials_all.query(
             'num_reward_past > -7 and num_reward_past < 7'
         ).sort_values('trial')
         if len(nwbs) > 1:
             grouped = (
-                    df_trials_all
+                    df_trials_all_baseline
                     .groupby(['ses_idx', 'num_reward_past'])[baseline_col_name]
                     .mean()
                     .reset_index()
@@ -234,7 +234,7 @@ def plot_row_panels_RPE(nwbs, channel, panels):
             sns.barplot(
                     x='num_reward_past',
                     y=baseline_col_name,
-                    data=df_trials_all,
+                    data=df_trials_all_baseline,
                     palette='vlag',
                     hue='num_reward_past',
                     errorbar='se',
@@ -927,12 +927,12 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
     if baseline_col_name in df_trials_all:
 
-        df_trials_all = df_trials_all.query(
+        df_trials_all_baseline = df_trials_all.query(
             'num_reward_past > -7 and num_reward_past < 7'
         ).sort_values('trial')
         if len(nwbs) > 1:
             grouped = (
-                    df_trials_all
+                    df_trials_all_baseline
                     .groupby(['ses_idx', 'num_reward_past'])[baseline_col_name]
                     .mean()
                     .reset_index()
