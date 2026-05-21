@@ -148,7 +148,7 @@ def run_analysis(
         os.makedirs(plot_loc)
 
     if parameters["save_dfs"] == True:
-        r_utils.save_nwb_list(nwbs_all, '/results/data/', df_curation, df_sess)
+        r_utils.save_nwb_list(nwbs_all, '/results/data/', None, df_sess)
 
     ############## RUN ANALYSIS ##############
 
