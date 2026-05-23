@@ -67,7 +67,9 @@ def get_all_channels(parameters, ch_suffix, df_curation):
     all_channels = [ch + ch_suffix for ch in parameters['channels'].keys()]
     channel_locs = [parameters['channels'][ch] for ch in parameters['channels'].keys()]
     if df_curation is not None:
-        all_channels = [df_curation['correct_mapping'][ch] for ch in parameters['channels'].keys()]
+        all_channels = [
+            (ch if str(ch).startswith('Iso') else df_curation['correct_mapping'][ch])
+            for ch in parameters['channels'].keys()]
         channel_locs = ['' for ch in all_channels]
 
     return all_channels, channel_locs
@@ -104,6 +106,8 @@ def run_analysis(
     else:
         plot_loc = '/results/plots/'
 
+
+
     [Path(f"/results/data/{subject_id}").mkdir(parents=True, exist_ok=True) for subject_id in df_sess['subject_id'].unique()]
 
     parameters = validate_pearsonr(parameters)
@@ -124,8 +128,8 @@ def run_analysis(
         signal1 = f"{pair[0]}{ch_suffix}"
         signal2 = f"{pair[1]}{ch_suffix}"
         if df_curation is not None:
-            signal1 = df_curation['correct_mapping'][pair[0]]
-            signal2 = df_curation['correct_mapping'][pair[1]]
+            signal1 = df_curation['correct_mapping'].get(pair[0], pair[0])
+            signal2 = df_curation['correct_mapping'].get(pair[1], pair[1])
 
         nwbs_all = [analysis_utils.add_sliding_window_corr(
                     nwb,
@@ -155,9 +159,8 @@ def run_analysis(
     for channel, channel_loc in parameters['channels'].items():
         if parameters['preprocessing'] != 'raw' and df_curation is None:
             channel = f"{channel}{ch_suffix}"
-
         if df_curation is not None:
-            channel = df_curation['correct_mapping'][channel]
+            channel = df_curation['correct_mapping'].get(channel, channel_loc)
             channel_loc = ''
 
         if "all_sess" in parameters["plot_types"]:
