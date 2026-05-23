@@ -106,7 +106,8 @@ def run_analysis(
     else:
         plot_loc = '/results/plots/'
 
-
+    if parameters["plot_save_format"] != "png":
+        summary_plots.set_save_format(fmt=parameters["plot_save_format"])
 
     [Path(f"/results/data/{subject_id}").mkdir(parents=True, exist_ok=True) for subject_id in df_sess['subject_id'].unique()]
 
@@ -115,7 +116,7 @@ def run_analysis(
 
     df_curation = get_data_curation(parameters['data_curation_file'])
     if df_curation is not None:
-        (nwbs_all, nwbs_all_curated) = r_utils.apply_curation_nwb_list(nwbs_all, df_curation, drop_borderline = parameters['drop_borderline_data_curation'])
+        (nwbs_all, nwbs_all_curated) = r_utils.apply_curation_nwb_list(nwbs_all, df_curation, drop_borderline=parameters['drop_borderline_data_curation'])
         if parameters['drop_borderline_data_curation']:
             nwbs_all = nwbs_all_curated
         

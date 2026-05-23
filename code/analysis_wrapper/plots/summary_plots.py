@@ -34,7 +34,15 @@ mpl.rcParams.update({
     "figure.titlesize": FONTSIZE
 })
 
+SAVE_FORMAT = "png"
+TRANSPARENT_PLOT = False
 
+def set_save_format(fmt: str):
+    global SAVE_FORMAT
+    SAVE_FORMAT = fmt.lower()
+    if fmt in ['tiff', 'pdf', 'tif', 'svg']:
+        global TRANSPARENT_PLOT
+        TRANSPARENT_PLOT = True
 
 def regression_choice_time_vs_reward(df,  y_col, reward_col='earned_reward',max_lag=6):
     """
@@ -256,11 +264,11 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     avg_signal_cols = [c for c in df_trials_all.columns if c.startswith("avg_data") and channel.split("_dff")[0] in c]
 
     if len(avg_signal_cols) != 1:
-        print("incorrect number of avg_signal_col found, skipping RPE vs avg signal plot")
+        print(f"incorrect number of avg_signal_col found ({len(avg_signal_cols)} found), skipping RPE vs avg signal plot")
         print(avg_signal_cols)
         return panels
 
-    plot_RPE_by_avg_signal(df_trials_all, avg_signal_cols[0], ax = panels[4])
+    plot_RPE_by_avg_signal(df_trials_all, avg_signal_cols[0], ax=panels[4])
     # panels[4].set_xlim([-1, 1])
     
     for ax in panels:
@@ -399,7 +407,8 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
 
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi = 200)
+        plt.savefig(f"{loc}all_sess_left_right_RPE_{subject_id}_{channel}_{channel_loc}.{SAVE_FORMAT}",
+                                    bbox_inches='tight', transparent=TRANSPARENT_PLOT, dpi=200)
         plt.close(fig)
 
 def plot_row_panels_PSTH_extras_legends(panels):
@@ -573,7 +582,8 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
             break
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi = 200)
+        plt.savefig(f"{loc}all_sess_PSTH_extras_{subject_id}_{channel}_{channel_loc}.{SAVE_FORMAT}",
+                                    bbox_inches='tight', transparent=TRANSPARENT_PLOT, dpi=200)
         plt.close(fig)
 
 def plot_rpe_summary_plot(fig, subplot_spec, panel_spec, subject_id):
@@ -754,7 +764,8 @@ def plot_weekly_grid(df_sess, nwbs_by_week, rpe_slope, channel, channel_loc, loc
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}weekly_{subject_id}_{channel}.png" )
+        plt.savefig(f"{loc}weekly_{subject_id}_{channel}.{SAVE_FORMAT}",
+            bbox_inches='tight', transparent=TRANSPARENT_PLOT, dpi = 1000)    
         plt.close()
 
 def plot_row_panels_PSTH_legends(df_trials_all, panels):
@@ -930,6 +941,7 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
         df_trials_all_baseline = df_trials_all.query(
             'num_reward_past > -7 and num_reward_past < 7'
         ).sort_values('trial')
+        df_trials_all_baseline['num_reward_past_baseline'] = df_trials_all_baseline.groupby(['ses_idx'])['num_reward_past'].shift(1)
         if len(nwbs) > 1:
             grouped = (
                     df_trials_all_baseline
@@ -1046,7 +1058,8 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
             break
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_PSTH_{subject_id}_{channel}_{channel_loc}.png", bbox_inches='tight', transparent=False, dpi=300)
+        plt.savefig(f"{loc}all_sess_PSTH_{subject_id}_{channel}_{channel_loc}.{SAVE_FORMAT}",
+                            bbox_inches='tight', transparent=TRANSPARENT_PLOT, dpi=300)
         plt.close(fig)
 
 def plot_avg_final_N_sess(df_sess, nwbs_all, channels, channel_locs, final_N_sess = 5, loc = None):
@@ -1116,7 +1129,8 @@ def plot_avg_final_N_sess(df_sess, nwbs_all, channels, channel_locs, final_N_ses
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}avg_signal_{subject_id}.png",bbox_inches='tight',transparent = False, dpi = 1000)
+        plt.savefig(f"{loc}avg_signal_{subject_id}.{SAVE_FORMAT}",bbox_inches='tight',
+                            transparent = TRANSPARENT_PLOT, dpi = 1000)
         plt.close()
 
 def set_bar_percentages(ax, df, x_col, hue_col):
@@ -1327,7 +1341,8 @@ def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_RPE_{subject_id}_{channel}_{channel_loc}.pdf",bbox_inches='tight',transparent = True, dpi = 1000)
+        plt.savefig(f"{loc}all_sess_RPE_{subject_id}_{channel}_{channel_loc}.{SAVE_FORMAT}",
+                bbox_inches='tight',transparent = TRANSPARENT_PLOT, dpi = 1000)
         plt.close()
 def plot_all_sess_behavior(df_sess, nwbs_all,loc=None):
     """
@@ -1377,8 +1392,8 @@ def plot_all_sess_behavior(df_sess, nwbs_all,loc=None):
 
 
     if loc is not None:
-        plt.savefig(f'{loc}{nwbs_all[0].session_id.replace("behavior_","")}_behavior.png'
-                            ,bbox_inches='tight',transparent = False, dpi = 1000)
+        plt.savefig(f'{loc}{nwbs_all[0].session_id.replace("behavior_","")}_behavior.{SAVE_FORMAT}'
+                            ,bbox_inches='tight',transparent = TRANSPARENT_PLOT, dpi = 300)
         plt.close()
 
 
@@ -1563,5 +1578,6 @@ def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=Non
         
 
     if loc is not None:
-        plt.savefig(f"{loc}all_sess_pearson_{subject_id}_{channel_combos}.png", bbox_inches='tight', transparent=False, dpi = 200)
+        plt.savefig(f"{loc}all_sess_pearson_{subject_id}_{channel_combos}.{SAVE_FORMAT}", 
+                        bbox_inches='tight', transparent=TRANSPARENT_PLOT, dpi=200)
         plt.close(fig)
