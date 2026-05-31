@@ -1320,10 +1320,11 @@ def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
     # set bottom row xlabels using the last row panels
     last_panels = axes_rows[-1]
     if last_panels is not None:
-        last_panels[2].set_xlabel('Consecutive No-Reward and Reward Trials')
         last_panels[0].set_xlabel('Time (s) from choice')
         last_panels[1].set_xlabel('Time (s) from choice')
-        last_panels[-1].set_xlabel('Time (s) from choice')
+        last_panels[2].set_xlabel('Consecutive No-Reward and Reward Trials')
+        last_panels[3].set_xlabel('Time (s) from choice')
+        last_panels[-1].set_xlabel('RPE earned')
 
     # show legends on the first data row (row index 1) if it exists
     if nrows > 1 and axes_rows[1] is not None:
