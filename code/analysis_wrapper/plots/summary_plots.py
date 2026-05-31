@@ -41,6 +41,10 @@ def set_save_format(fmt: str):
     global SAVE_FORMAT
     SAVE_FORMAT = fmt.lower()
     if fmt in ['tiff', 'pdf', 'tif', 'svg']:
+        # set pdf plot requirements
+        mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
+        mpl.rcParams["axes.spines.right"] = False
+        mpl.rcParams["axes.spines.top"] = False
         global TRANSPARENT_PLOT
         TRANSPARENT_PLOT = True
 
@@ -355,9 +359,6 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
     Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
     producing one two-row block per session in nwbs_all.
     """
-    mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
 
     nrows = len(nwbs_all)
     ncols = 8
@@ -524,9 +525,7 @@ def plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc=None)
     Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
     producing one two-row block per session in nwbs_all.
     """
-    mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
+    
 
     nrows = len(nwbs_all)
     ncols = 4
@@ -997,9 +996,7 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
     Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
     producing one two-row block per session in nwbs_all.
     """
-    mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
+
 
     nrows = len(nwbs_all)
     ncols = N_COLS_PER_ROW
@@ -1064,11 +1061,6 @@ def plot_all_sess_PSTH(df_sess, nwbs_all, channel, channel_loc, loc=None):
         plt.close(fig)
 
 def plot_avg_final_N_sess(df_sess, nwbs_all, channels, channel_locs, final_N_sess = 5, loc = None):
-    # set pdf plot requirements
-    mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
-
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
 
 
     if len(df_sess['subject_id'].unique()) > 1:
@@ -1291,9 +1283,7 @@ def plot_per_sess_behavior_data(nwb, fig, panels):
 
 def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
     # set pdf plot requirements
-    mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
+
 
 
     nrows = len(nwbs_all)
@@ -1361,10 +1351,7 @@ def plot_all_sess_behavior(df_sess, nwbs_all,loc=None):
     "figure.titlesize": FONTSIZE -2
 })
 
-    # set pdf plot requirements
-    mpl.rcParams['pdf.fonttype'] = 42 # allow text of pdf to be edited in illustrator
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
+
 
 
     nrows = len(nwbs_all)
@@ -1528,9 +1515,7 @@ def plot_all_sess_pearson(df_sess, nwbs_all, channel_combos, parameters, loc=Non
     Uses plot_row_panels_PSTH_legends for a top legend row and plot_row_panels_PSTH for the PSTH row,
     producing one two-row block per session in nwbs_all.
     """
-    mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams["axes.spines.right"] = False
-    mpl.rcParams["axes.spines.top"] = False
+
 
     nrows = len(nwbs_all)
     ncols = 5
