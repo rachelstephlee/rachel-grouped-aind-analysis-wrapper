@@ -214,24 +214,25 @@ def plot_row_panels_RPE(nwbs, channel, panels):
     # groupby should drop nan values.
     baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
     if baseline_col_name in df_trials_all:
+        df_trials_all['num_reward_past_baseline'] = df_trials_all.groupby(['ses_idx'])['num_reward_past'].shift(1)
         df_trials_all_baseline = df_trials_all.query(
-            'num_reward_past > -7 and num_reward_past < 7'
+            'num_reward_past_baseline > -7 and num_reward_past_baseline < 7'
         ).sort_values('trial')
         if len(nwbs) > 1:
             grouped = (
                     df_trials_all_baseline
-                    .groupby(['ses_idx', 'num_reward_past'])[baseline_col_name]
+                    .groupby(['ses_idx', 'num_reward_past_baseline'])[baseline_col_name]
                     .mean()
                     .reset_index()
                 )
             agg = (
                     grouped
-                    .groupby('num_reward_past')[baseline_col_name]
+                    .groupby('num_reward_past_baseline')[baseline_col_name]
                     .agg(['mean', 'sem'])
                     .reset_index()
                 )
             panels[2].bar(
-                    agg['num_reward_past'],
+                    agg['num_reward_past_baseline'],
                     agg['mean'],
                     yerr=agg['sem'],
                     color=sns.color_palette('vlag', len(agg)),
@@ -240,11 +241,11 @@ def plot_row_panels_RPE(nwbs, channel, panels):
             panels[2].set_ylabel(f'{data_col}_baseline')
         else:
             sns.barplot(
-                    x='num_reward_past',
+                    x='num_reward_past_baseline',
                     y=baseline_col_name,
                     data=df_trials_all_baseline,
                     palette='vlag',
-                    hue='num_reward_past',
+                    hue='num_reward_past_baseline',
                     errorbar='se',
                     dodge=False,
                     legend=False,
@@ -309,16 +310,17 @@ def plot_row_panels_left_right_RPE(nwb_split, channel, panels, offsets):
         baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
         if baseline_col_name in df_trials_ch:
 
-            df_trials_ch = df_trials_ch.query(
-                'num_reward_past > -7 and num_reward_past < 7'
+            df_trials_ch['num_reward_past_baseline'] = df_trials_ch.groupby(['ses_idx'])['num_reward_past'].shift(1)
+            df_trials_ch_baseline = df_trials_ch.query(
+                'num_reward_past_baseline > -7 and num_reward_past_baseline < 7'
             ).sort_values('trial')
 
             sns.barplot(
-                x='num_reward_past',
+                x='num_reward_past_baseline',
                 y=baseline_col_name,
                 data=df_trials_ch,
                 palette='vlag',
-                hue='num_reward_past',
+                hue='num_reward_past_baseline',
                 errorbar='se',
                 dodge=False,
                 legend=False,
@@ -395,8 +397,8 @@ def plot_all_sess_left_right_RPE_PSTH(df_sess, nwbs_all, channel, channel_loc, o
     # set bottom row xlabels using the last row panels
     last_panels = axes_rows[-1]
     if last_panels is not None:
-        last_panels[1].set_xlabel('num_reward_past')
-        last_panels[5].set_xlabel('num_reward_past')
+        last_panels[1].set_xlabel('Consecutive No-Reward and Reward Trials')
+        last_panels[5].set_xlabel('Consecutive No-Reward and Reward Trials')
         last_panels[0].set_xlabel('Time (s) from choice')
         last_panels[2].set_xlabel('Time (s) from choice')
         last_panels[4].set_xlabel('Time (s) from choice')
@@ -937,26 +939,25 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
     # 5. Baseline by num_reward_past (grand mean/SE)
     baseline_col_name = f'{data_col}_{channel.split("_dff")[0]}_baseline'
     if baseline_col_name in df_trials_all:
-
+        df_trials_all['num_reward_past_baseline'] = df_trials_all.groupby(['ses_idx'])['num_reward_past'].shift(1)
         df_trials_all_baseline = df_trials_all.query(
-            'num_reward_past > -7 and num_reward_past < 7'
+            'num_reward_past_baseline > -7 and num_reward_past_baseline < 7'
         ).sort_values('trial')
-        df_trials_all_baseline['num_reward_past_baseline'] = df_trials_all_baseline.groupby(['ses_idx'])['num_reward_past'].shift(1)
         if len(nwbs) > 1:
             grouped = (
                     df_trials_all_baseline
-                    .groupby(['ses_idx', 'num_reward_past'])[baseline_col_name]
+                    .groupby(['ses_idx', 'num_reward_past_baseline'])[baseline_col_name]
                     .mean()
                     .reset_index()
                 )
             agg = (
                     grouped
-                    .groupby('num_reward_past')[baseline_col_name]
+                    .groupby('num_reward_past_baseline')[baseline_col_name]
                     .agg(['mean', 'sem'])
                     .reset_index()
                 )
             panels[4].bar(
-                    agg['num_reward_past'],
+                    agg['num_reward_past_baseline'],
                     agg['mean'],
                     yerr=agg['sem'],
                     color=sns.color_palette('vlag', len(agg)),
@@ -965,11 +966,11 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
             panels[4].set_ylabel(f'{data_col}_baseline')
         else:
             sns.barplot(
-                    x='num_reward_past',
+                    x='num_reward_past_baseline',
                     y=baseline_col_name,
-                    data=df_trials_all,
+                    data=df_trials_all_baseline,
                     palette='vlag',
-                    hue='num_reward_past',
+                    hue='num_reward_past_baseline',
                     errorbar='se',
                     dodge=False,
                     legend=False,
@@ -1329,7 +1330,7 @@ def plot_all_sess_RPE(df_sess, nwbs_all, channel, channel_loc, loc=None):
     # set bottom row xlabels using the last row panels
     last_panels = axes_rows[-1]
     if last_panels is not None:
-        last_panels[2].set_xlabel('num_reward_past')
+        last_panels[2].set_xlabel('Consecutive No-Reward and Reward Trials')
         last_panels[0].set_xlabel('Time (s) from choice')
         last_panels[1].set_xlabel('Time (s) from choice')
         last_panels[-1].set_xlabel('Time (s) from choice')
