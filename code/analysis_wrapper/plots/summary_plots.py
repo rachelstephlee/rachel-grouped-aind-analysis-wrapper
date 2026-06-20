@@ -184,8 +184,8 @@ def plot_row_panels_RPE(nwbs, channel, panels):
         z_score_text_suffix = 'z-scored '
     else:
         error_type = 'sem'
-        data_col = 'data'
-        z_score_text_suffix = ''
+        data_col = 'data_z'
+        z_score_text_suffix = 'z-scored'
     
     # 1. Rew/NRew
     pf.plot_fip_psth_compare_alignments(
@@ -880,8 +880,8 @@ def plot_row_panels_PSTH(nwbs, channel, panels, legend_panel = False):
         z_score_text_suffix = 'z-scored '
     else:
         error_type = 'sem'
-        data_col = 'data'
-        z_score_text_suffix = ''
+        data_col = 'data_z'
+        z_score_text_suffix = 'z-scored'
     
     # 1. Choice L vs R
     pf.plot_fip_psth_compare_alignments(

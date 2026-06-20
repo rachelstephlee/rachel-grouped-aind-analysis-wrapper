@@ -144,8 +144,16 @@ def run_analysis(
         offsets = [0.33,1]
         all_channels, _ = get_all_channels(parameters, ch_suffix, df_curation)
         nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
+        # TODO: 
+        # 1. [done] edit add_AUC_rpe_slope to A. save outside of analysis utils 
+        # B. go through it nwb by nwb, not week by week, have nwbs_by_week later
+        # C. save data_column in combined_rpe_slope. 
+        # 2. need to run for data_norm and data_z_norm, 
+        # and save combined_rpe_slope with correct_name for columns
+        # 3. then, in summary_plots, search for avg_signal with data_z or data accordingly (for averaged vs not)
+        # NEXT, will need to an option to force data_z version 
         (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, all_channels,
-                                                parameters["save_dfs"], data_column="data_norm", offsets=offsets)
+                                                parameters["save_dfs"], data_column="data_z_norm", offsets=offsets)
         nwbs_all = [nwb for week in nwbs_by_week for nwb in week]
 
     ############## SAVE OR PREPARE PLOT_LOC ##############
