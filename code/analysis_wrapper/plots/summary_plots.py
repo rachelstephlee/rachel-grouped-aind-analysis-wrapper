@@ -48,60 +48,73 @@ def set_save_format(fmt: str):
         global TRANSPARENT_PLOT
         TRANSPARENT_PLOT = True
 
-def regression_choice_time_vs_reward(df,  y_col, reward_col='earned_reward',max_lag=6):
-    """
-    Fit OLS of y_col against reward at current trial and up to max_lag previous trials.
-
-    Returns:
-        - dict with keys:
-        'model' : full statsmodels RegressionResults (all lags)
-        'coef'  : DataFrame of coefficients, p-values, conf intervals for the full model
-        'univariate' : dict of RegressionResults for each single-lag regression
-    """
-
-
-    df = df.copy()
-    # construct lagged reward columns: lag0 = current trial, lag1 = previous trial, etc.
-    lagged = pd.DataFrame({f"{reward_col}_lag{lag}": df[reward_col].shift(lag).astype(float)
-                            for lag in range(0, max_lag + 1)}, index=df.index)
-    y = df[y_col]
-    data = pd.concat([y, lagged], axis=1).dropna()
-    X = data[lagged.columns]
-    model = sm.OLS(data[y_col], X).fit()
-
-    # summary table for full model
-    coef = model.params.to_frame(name='coef')
-    coef['pvalue'] = model.pvalues
-    ci = model.conf_int()
-    coef['ci_lower'] = ci[0]
-    coef['ci_upper'] = ci[1]
-
-
-    return {'model': model, 'coef': coef}
-
-def plot_bayer_glimcher(nwb, channel, max_lag=6):
+def plot_bayer_glimcher(nwb, channel, ax, max_lag=6):
     # get trial-level data
     df_trials = nwb.df_trials
-    y_col = f'avg_data_norm_{channel}_choice_time'
+    y_cols = [c for c in df_trials.columns if c.startswith("avg_data") and c.endswith(f"{channel}_choice_time")]
+    if len(y_cols) != 1:
+        raise ValueError(f"Expected 1 avg_data*{channel}_choice_time column, found {y_cols}")
+    y_col = y_cols[0]
     # run regression
-    results = regression_choice_time_vs_reward(df_trials, reward_col='earned_reward', max_lag=max_lag, y_col=y_col)
+    results = analysis_utils.regression_choice_time_vs_reward(df_trials, reward_col='earned_reward', max_lag=max_lag, y_col=y_col)
 
     coef_df = results['coef'].reset_index().rename(columns={'index': 'lag'})
     coef_df['lag_num'] = coef_df['lag'].str.extract(r'lag(\d+)').astype(int)
+    coef_df['session_id'] = nwb.session_id
 
     # plot coefficients with error bars
-    plt.figure(figsize=(8, 5))
-    sns.lineplot(x='lag_num', y='coef', data=coef_df)
-    plt.errorbar(x=coef_df['lag_num'], y=coef_df['coef'], 
-                 yerr=[coef_df['coef'] - coef_df['ci_lower'], coef_df['ci_upper'] - coef_df['coef']], 
-                 fmt='none', c='black', capsize=5)
-    plt.axhline(0, color='gray', linestyle='--')
-    plt.xlabel('Reward Lag (0=current trial)')
-    plt.ylabel('Regression Coefficient on Choice Time')
-    plt.title('Bayer & Glimcher Style Regression of Choice Time on Past Rewards')
-    plt.xticks(coef_df['lag_num'])
-    plt.tight_layout()
-    plt.show()
+    sns.lineplot(x='lag_num', y='coef', data=coef_df, ax=ax, marker='o')
+    ax.errorbar(x=coef_df['lag_num'], y=coef_df['coef'],
+                yerr=[coef_df['coef'] - coef_df['ci_lower'], coef_df['ci_upper'] - coef_df['coef']],
+                fmt='none', c='black', capsize=5)
+    ax.axhline(0, color='gray', linestyle='--')
+    ax.set_xlabel('Reward Lag (0=current trial)')
+    ax.set_ylabel('Regression Coefficient on Choice Time')
+    ax.set_title('Bayer & Glimcher Style Regression of Choice Time on Past Rewards')
+    ax.set_xticks(coef_df['lag_num'].unique())
+    return ax, coef_df
+def plot_bayer_glimcher_rows(nwb_list, channel, channel_loc,loc = None, max_lag=6):
+    """
+    Plot Bayer & Glimcher regression for each nwb in nwb_list as a separate ROW.
+    Calls plot_bayer_glimcher(nwb, channel, ax, max_lag).
+
+    Returns (fig, axes_array)
+    """
+
+    n = len(nwb_list)
+    if n == 0:
+        raise ValueError("nwb_list is empty")
+
+    figsize = (6, max(3, 3 * n))
+    subject_id = nwb_list[0].session_id.split('_')[0]
+    fig, axes = plt.subplots(nrows=n, ncols=1, figsize=figsize, squeeze=False)
+    axes = axes[:, 0]  # make 1D array of axes
+
+    coef_dfs = []
+    for i, nwb in enumerate(nwb_list):
+        ax = axes[i]
+        try:
+            ax, coef_df = plot_bayer_glimcher(nwb, channel, ax, max_lag=max_lag)
+            coef_dfs.append(coef_df)
+            label = getattr(nwb, "session_id", None) or getattr(nwb, "subject_id", None) or str(nwb)
+            ax.set_title(label, fontsize=10)
+        except Exception as exc:
+            ax.clear()
+            ax.text(0.5, 0.5, f"Error:\n{exc}", ha="center", va="center", wrap=True)
+            ax.set_title(f"session {i} (error)")
+
+    fig.suptitle(f"{subject_id}_{channel}_{channel_loc} — Bayer & Glimcher regressions")
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+    if loc is not None:
+        plt.savefig(f"{loc}{subject_id}_{channel}_{channel_loc}_b&g.png", bbox_inches='tight', transparent=False, dpi = 200)
+        plt.close(fig)
+
+    all_coef_df = pd.concat(coef_dfs, ignore_index=True) if coef_dfs else pd.DataFrame()
+    return fig, axes, all_coef_df
+
+
 
 def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
 

@@ -138,10 +138,9 @@ def run_analysis(
                     signal2name=signal2,
                 ) for nwb in nwbs_all]
 
-        # TODO: FIX THIS HERE ALSO
-    if "rpe" in parameters["plot_types"] or "choice_split_rpe" in parameters["plot_types"] \
-            or "rpe_no_plots" in parameters["plot_types"] or "weekly" in parameters["plot_types"]:
-        offsets = [0.33,1]
+    if {"rpe", "choice_split_rpe", "rpe_no_plots", "weekly", "bayer&glimcher"} & set(parameters["plot_types"]):
+
+        offsets = [0.33,1] 
         all_channels, _ = get_all_channels(parameters, ch_suffix, df_curation)
         nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
         # TODO: 
@@ -203,6 +202,12 @@ def run_analysis(
             
         if "all_sess_extra" in parameters["plot_types"]:
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
+
+        if "bayer&glimcher" in parameters["plot_types"]:
+            logger.info("running Bayer & Glimcher regression")
+            _, _, bg_coef_df = summary_plots.plot_bayer_glimcher_rows(nwbs_all, channel, channel_loc, loc=plot_loc)
+            if parameters["save_dfs"] and bg_coef_df is not None and len(bg_coef_df) > 0:
+                bg_coef_df.to_csv(f"/results/data/bg_coef_{channel}_{channel_loc}.csv", index=False)
 
         if "weekly" in parameters["plot_types"]:
             logger.info("running weekly plots")
