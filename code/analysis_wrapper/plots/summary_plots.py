@@ -51,7 +51,8 @@ def set_save_format(fmt: str):
 def plot_bayer_glimcher(nwb, channel, ax, max_lag=6):
     # get trial-level data
     df_trials = nwb.df_trials
-    y_cols = [c for c in df_trials.columns if c.startswith("avg_data") and c.endswith(f"{channel}_choice_time")]
+    channel_short = channel.split('_dff')[0] if '_dff' in channel else channel
+    y_cols = [c for c in df_trials.columns if c.startswith("avg_data") and c.endswith(f"{channel_short}_choice_time")]
     if len(y_cols) != 1:
         raise ValueError(f"Expected 1 avg_data*{channel}_choice_time column, found {y_cols}")
     y_col = y_cols[0]

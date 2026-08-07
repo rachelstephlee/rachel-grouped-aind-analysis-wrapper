@@ -207,19 +207,14 @@ def run_analysis(
             logger.info("running Bayer & Glimcher regression")
             _, _, bg_coef_df = summary_plots.plot_bayer_glimcher_rows(nwbs_all, channel, channel_loc, loc=plot_loc)
             if parameters["save_dfs"] and bg_coef_df is not None and len(bg_coef_df) > 0:
-                bg_coef_df.to_csv(f"/results/data/bg_coef_{channel}_{channel_loc}.csv", index=False)
+                channel_short = channel.split('_dff')[0] if '_dff' in channel else channel
+                bg_coef_df.to_csv(f"/results/data/bg_coef_{channel_short}_{channel_loc}.csv", index=False)
 
         if "weekly" in parameters["plot_types"]:
             logger.info("running weekly plots")
 
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week,combined_rpe_slope[combined_rpe_slope['channel'] == channel], channel, channel_loc, loc=plot_loc)
     
-    # TODO: FIX THIS WITH DATA CURATION
-    if "pearson" in parameters["plot_types"]:
-        for channel_pair in parameters['pearson_pairs']:
-            # channel_pair = [f"{channel}{ch_suffix}" for channel in channel_pair]
-            # send in channel_pair_locs depending on data_curation (if data curation, channel_pair_locs = channel_pairs)
-            summary_plots.plot_all_sess_pearson(df_sess, nwbs_all, channel_pair, parameters, loc = plot_loc)
 
     if "behavior" in parameters["plot_types"]:
         logger.info("running ALL SESS behavior")
