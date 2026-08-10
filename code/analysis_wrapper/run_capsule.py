@@ -208,7 +208,8 @@ def run_analysis(
             _, _, bg_coef_df = summary_plots.plot_bayer_glimcher_rows(nwbs_all, channel, channel_loc, loc=plot_loc)
             if parameters["save_dfs"] and bg_coef_df is not None and len(bg_coef_df) > 0:
                 channel_short = channel.split('_dff')[0] if '_dff' in channel else channel
-                bg_coef_df.to_csv(f"/results/data/bg_coef_{channel_short}_{channel_loc}.csv", index=False)
+                subject_id = df_sess['subject_id'].unique()[0]
+                bg_coef_df.to_csv(f"/results/data/{subject_id}/bg_coef_{channel_short}_{channel_loc}.csv", index=False)
 
         if "weekly" in parameters["plot_types"]:
             logger.info("running weekly plots")
