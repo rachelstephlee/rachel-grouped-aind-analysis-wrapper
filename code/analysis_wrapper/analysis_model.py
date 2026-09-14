@@ -28,8 +28,6 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
     dry_run: bool=Field(default=True, description="Dry run")
     save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis")
-    data_curation_file: str=Field(default="", description="Location of data curation json files from rachel_analysis_utils")
-    drop_borderline_data_curation: bool=Field(default=False, description="Whether to drop sessions that are borderline according to data curation")
     plot_save_format: str=Field(default="png", description="Format to save plots in, e.g. png, pdf, etc.")
     
 # only saving plots, no outputs needed 

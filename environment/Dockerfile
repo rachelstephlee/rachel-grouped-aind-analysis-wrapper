@@ -39,10 +39,11 @@ RUN --mount=type=secret,id=git-access-token \
     xarray==2025.7.1 \
     zarr==2.18.6 \
     aind_hierarchical_bootstrap \
+    analysis-pipeline-utils==0.2.7 \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.38#egg=aind-dynamic-foraging-basic-analysis \
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@edgecase_co_utils#egg=aind-dynamic-foraging-data-utils \
-    -e git+https://github.com/AllenNeuralDynamics/analysis-pipeline-utils@ae433685788495d8cc63032d2a8fb67cb354190f#egg=analysis-pipeline-utils \
-    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@1087d26fccf07901f51d7b509784b0cb5a0c407a#egg=rachel-analysis-utils
+    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@1087d26fccf07901f51d7b509784b0cb5a0c407a#egg=rachel-analysis-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-bwnm-fiber-data-curation-utils@da7f82deea5a1718776894f98fbf4c706bc23804#egg=aind-bwnm-fiber-data-curation-utils
 
 COPY postInstall /
 RUN --mount=type=secret,id=secrets . /run/secrets/secrets \
