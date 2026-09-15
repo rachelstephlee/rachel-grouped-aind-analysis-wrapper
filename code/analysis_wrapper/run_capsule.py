@@ -21,6 +21,7 @@ from analysis_wrapper.analysis_model import (
 
 from rachel_analysis_utils import nwb_utils as r_utils
 from rachel_analysis_utils import analysis_utils
+from rachel_analysis_utils import data_curation_helpers
 from analysis_wrapper.plots import summary_plots
 
 
@@ -45,7 +46,17 @@ def validate_pearsonr(parameters):
 
     return parameters  
 
-def get_all_channels(parameters, ch_suffix):
+def get_all_channels(parameters, ch_suffix, df_fip=None):
+    """
+    Channels to plot, paired with their location labels.
+
+    Under curation the names come from the curated df_fip events (targets), and
+    the labels in parameters['channels'] no longer apply.
+    """
+    if df_fip is not None:
+        all_channels = sorted(df_fip['event'].unique())
+        return all_channels, ['' for _ in all_channels]
+
     all_channels = [ch + ch_suffix for ch in parameters['channels'].keys()]
     channel_locs = [parameters['channels'][ch] for ch in parameters['channels'].keys()]
 
@@ -66,7 +77,16 @@ def run_analysis(
     if dry_run:
         logger.info("DRY RUN!!!!!!! ")
 
-    (df_sess, df_trials, df_events, df_fip) = r_utils.get_nwb_processed(analysis_dispatch_inputs.file_location, **parameters)
+    curation = None
+    if parameters['curation_csv'] is not None:
+        try:
+            curation = data_curation_helpers.load_curation(parameters['curation_csv'])
+        except Exception:
+            logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
+                             "Continuing without curation.")
+
+    (df_sess, df_trials, df_events, df_fip) = r_utils.get_nwb_processed(
+        analysis_dispatch_inputs.file_location, curation=curation, **parameters)
 
 
 
@@ -74,8 +94,11 @@ def run_analysis(
 
     df_trials = analysis_utils.enrich_df_trials(df_trials)
 
-    nwbs_all = r_utils.get_dummy_nwbs(df_trials, df_events, df_fip) 
+    nwbs_all = r_utils.get_dummy_nwbs(df_trials, df_events, df_fip)
     ch_suffix = '' if (parameters['preprocessing'] == 'raw') else f"_{parameters['preprocessing']}"
+
+    all_channels, channel_locs = get_all_channels(
+        parameters, ch_suffix, df_fip if curation is not None else None)
 
     # plot summary plots
     if dry_run:
@@ -88,24 +111,23 @@ def run_analysis(
 
     [Path(f"/results/data/{subject_id}").mkdir(parents=True, exist_ok=True) for subject_id in df_sess['subject_id'].unique()]
 
-    parameters = validate_pearsonr(parameters)
+    # parameters = validate_pearsonr(parameters)
 
 
-    for pair in parameters['pearson_pairs']:
+    # for pair in parameters['pearson_pairs']:
 
-        signal1 = f"{pair[0]}{ch_suffix}"
-        signal2 = f"{pair[1]}{ch_suffix}"
+    #     signal1 = f"{pair[0]}{ch_suffix}"
+    #     signal2 = f"{pair[1]}{ch_suffix}"
 
-        nwbs_all = [analysis_utils.add_sliding_window_corr(
-                    nwb,
-                    signal1name=signal1,
-                    signal2name=signal2,
-                ) for nwb in nwbs_all]
+    #     nwbs_all = [analysis_utils.add_sliding_window_corr(
+    #                 nwb,
+    #                 signal1name=signal1,
+    #                 signal2name=signal2,
+    #             ) for nwb in nwbs_all]
 
     if {"rpe", "choice_split_rpe", "rpe_no_plots", "weekly", "bayer&glimcher"} & set(parameters["plot_types"]):
 
-        offsets = [0.33,1] 
-        all_channels, _ = get_all_channels(parameters, ch_suffix)
+        offsets = [0.33,1]
         nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
         # TODO: 
         # 1. [done] edit add_AUC_rpe_slope to A. save outside of analysis utils 
@@ -128,9 +150,7 @@ def run_analysis(
 
     ############## RUN ANALYSIS ##############
 
-    for channel, channel_loc in parameters['channels'].items():
-        if parameters['preprocessing'] != 'raw':
-            channel = f"{channel}{ch_suffix}"
+    for channel, channel_loc in zip(all_channels, channel_locs):
 
         if "all_sess" in parameters["plot_types"]:
             logger.info("running NEURAL PSTH")
@@ -186,7 +206,6 @@ def run_analysis(
                 summary_plots.plot_all_sess_behavior(df_sess, nwb_batch, loc = plot_loc)
     if "avg_lastN_sess" in parameters["plot_types"]:
         logger.info("running average last N sessions")
-        all_channels, channel_locs = get_all_channels(parameters, ch_suffix)
         summary_plots.plot_avg_final_N_sess(df_sess, nwbs_all, all_channels, channel_locs, final_N_sess = parameters["last_N_sess"], loc = plot_loc)
 
 
