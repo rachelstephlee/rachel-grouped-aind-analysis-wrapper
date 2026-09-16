@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from pathlib import Path
@@ -12,11 +13,10 @@ if script_dir in sys.path:
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
+from analysis_pipeline_utils.metadata import construct_processing_record, docdb_record_exists, write_results_and_metadata
 from analysis_pipeline_utils.analysis_dispatch_model import AnalysisDispatchModel
-from analysis_pipeline_utils.utils_analysis_wrapper import run_analysis_jobs
-
 from analysis_wrapper.analysis_model import (
-    SummaryPlotsAnalysisSpecification, SummaryPlotsAnalysisOutputs
+    SummaryPlotsAnalysisSpecification, SummaryPlotsAnalysisSpecificationCLI
 )
 
 from rachel_analysis_utils import nwb_utils as r_utils
@@ -44,7 +44,7 @@ def validate_pearsonr(parameters):
             print("Removing pairs with missing channels:", removed)
         parameters['pearson_pairs'] = valid_pairs
 
-    return parameters
+    return parameters  
 
 def get_all_channels(parameters, ch_suffix, df_fip=None):
     """
@@ -62,17 +62,20 @@ def get_all_channels(parameters, ch_suffix, df_fip=None):
 
     return all_channels, channel_locs
 
-
-### USER EDITABLE FUNCTION WHERE ANALYSIS IS EXECUTED
 def run_analysis(
     analysis_dispatch_inputs: AnalysisDispatchModel,
-    analysis_parameters: SummaryPlotsAnalysisSpecification,
-) -> dict | None:
-    # run_analysis_jobs (in analysis_pipeline_utils) now owns building the
-    # processing record, the docdb-already-exists check, and writing
-    # results/metadata. This function only needs to run the analysis and
-    # return a dict of output parameters.
-    parameters = analysis_parameters.model_dump()
+    **parameters,
+) -> None:
+    processing = construct_processing_record(analysis_dispatch_inputs,**parameters)
+    
+    dry_run = parameters["dry_run"]
+
+    if docdb_record_exists(processing):
+        logger.info("Record already exists, skipping.")
+        return
+    
+    if dry_run:
+        logger.info("DRY RUN!!!!!!! ")
 
     curation = None
     if parameters['curation_csv'] is not None:
@@ -98,7 +101,10 @@ def run_analysis(
         parameters, ch_suffix, df_fip if curation is not None else None)
 
     # plot summary plots
-    plot_loc = '/results/plots/'
+    if dry_run:
+        plot_loc = '/root/capsule/results/plots_TEST/'
+    else:
+        plot_loc = '/results/plots/'
 
     if parameters["plot_save_format"] != "png":
         summary_plots.set_save_format(fmt=parameters["plot_save_format"])
@@ -123,14 +129,14 @@ def run_analysis(
 
         offsets = [0.33,1]
         nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
-        # TODO:
-        # 1. [done] edit add_AUC_rpe_slope to A. save outside of analysis utils
+        # TODO: 
+        # 1. [done] edit add_AUC_rpe_slope to A. save outside of analysis utils 
         # B. go through it nwb by nwb, not week by week, have nwbs_by_week later
-        # C. save data_column in combined_rpe_slope.
-        # 2. need to run for data_norm and data_z_norm,
+        # C. save data_column in combined_rpe_slope. 
+        # 2. need to run for data_norm and data_z_norm, 
         # and save combined_rpe_slope with correct_name for columns
         # 3. then, in summary_plots, search for avg_signal with data_z or data accordingly (for averaged vs not)
-        # NEXT, will need to an option to force data_z version
+        # NEXT, will need to an option to force data_z version 
         (nwbs_by_week, combined_rpe_slope) = analysis_utils.add_AUC_and_rpe_slope(nwbs_by_week, all_channels,
                                                 parameters["save_dfs"], data_column="data_z_norm", offsets=offsets)
         nwbs_all = [nwb for week in nwbs_by_week for nwb in week]
@@ -174,7 +180,7 @@ def run_analysis(
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwb_late, channel, channel_loc, loc = plot_loc + 'late_')
 
 
-
+            
         if "all_sess_extra" in parameters["plot_types"]:
             summary_plots.plot_all_sess_PSTH_extras(df_sess, nwbs_all, channel, channel_loc, loc = plot_loc)
 
@@ -190,7 +196,7 @@ def run_analysis(
             logger.info("running weekly plots")
 
             summary_plots.plot_weekly_grid(df_sess, nwbs_by_week,combined_rpe_slope[combined_rpe_slope['channel'] == channel], channel, channel_loc, loc=plot_loc)
-
+    
 
     if "behavior" in parameters["plot_types"]:
         logger.info("running ALL SESS behavior")
@@ -202,7 +208,14 @@ def run_analysis(
         logger.info("running average last N sessions")
         summary_plots.plot_avg_final_N_sess(df_sess, nwbs_all, all_channels, channel_locs, final_N_sess = parameters["last_N_sess"], loc = plot_loc)
 
-    return {}
+
+    # # # DRY RUN (comment in or out)
+    if not dry_run:
+        logger.info("Running analysis and posting results")
+        write_results_and_metadata(processing, ANALYSIS_BUCKET)
+        logger.info("Successfully wrote record to docdb and s3")
+    else:
+        logger.info("Dry run complete. Results not posted")
 
 
 # Most of the below code will not need to change per-analysis
@@ -212,8 +225,35 @@ if __name__ == "__main__":
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-    run_analysis_jobs(
-        analysis_input_model=SummaryPlotsAnalysisSpecification,
-        analysis_output_model=SummaryPlotsAnalysisOutputs,
-        run_function=run_analysis,
-    )
+    input_model_paths = tuple(DATA_PATH.glob('job_dict/*'))
+    logger.info(f"Found {len(input_model_paths)} input job models to run analysis on.")
+    analysis_specs = None
+
+    analysis_spec_path = tuple(DATA_PATH.glob("analysis_parameters.json"))
+    if analysis_spec_path:
+        with open(analysis_spec_path[0], "r") as f:
+            analysis_specs = json.load(f)
+
+        logger.info(
+            "Found analysis specification json. Parsing list of analysis specifications"
+        )
+    else:
+        logger.info(
+            "No analysis parameters json found. Defaulting to parameters passed in via input arguments"
+        )
+
+    ### WAY TO PARSE FROM USER DEFINED APP PANEL
+    if analysis_specs is None:
+        analysis_specs = SummaryPlotsAnalysisSpecificationCLI().model_dump_json()
+
+    logger.info(f"Analysis Specification: {analysis_specs}")
+
+    for model_path in input_model_paths:
+        with open(model_path, "r") as f:
+            analysis_dispatch_inputs = AnalysisDispatchModel.model_validate(json.load(f))
+        
+        analysis_specification = SummaryPlotsAnalysisSpecification.model_validate(analysis_specs).model_dump()
+
+
+        run_analysis(analysis_dispatch_inputs = analysis_dispatch_inputs, **analysis_specification)
+        
