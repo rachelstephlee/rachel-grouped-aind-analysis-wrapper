@@ -19,7 +19,7 @@
 			"help_text": "Fitted model for RPE. See this link for all: \n\nhttps://foraging-behavior-browser.allenneuraldynamics-test.org/RL_model_playground",
 			"type": "text",
 			"value_type": "string",
-			"default_value": "\"QLearning_L2F1_CKfull_softmax\"",
+			"default_value": "QLearning_L1F1_CK1_softmax",
 			"required": true
 		}
 	]
