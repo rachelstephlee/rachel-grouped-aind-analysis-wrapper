@@ -77,7 +77,7 @@ def run_analysis(
     curation = None
     if parameters['curation_csv'] is not None:
         try:
-            curation = data_curation_helpers.load_curation(parameters['curation_csv'])
+            curation, curation_full = data_curation_helpers.load_curation(parameters['curation_csv'])
         except Exception:
             logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
                              "Continuing without curation.")
@@ -140,7 +140,15 @@ def run_analysis(
         os.makedirs(plot_loc)
 
     if parameters["save_dfs"] == True:
-        r_utils.save_nwb_list(nwbs_all, '/results/data/', None, df_sess)
+        r_utils.save_nwb_list(nwbs_all, '/results/data/', curation_full, df_sess)
+    else:
+        if curation_full is not None:
+            suffix = "_".join(sorted(str(s) for s in df_sess['subject_id'].unique()))
+            curation_path = Path("/results/data") / f"df_curation_{suffix}.csv"
+            curation_path.parent.mkdir(parents=True, exist_ok=True)
+            logger.info(f"saving curation to {curation_path}")
+            curation_full.to_csv(curation_path, index=False)
+
 
     ############## RUN ANALYSIS ##############
 
