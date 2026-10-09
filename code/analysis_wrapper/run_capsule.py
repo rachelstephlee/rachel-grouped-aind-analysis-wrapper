@@ -77,7 +77,7 @@ def run_analysis(
     curation = None
     if parameters['curation_csv'] is not None:
         try:
-            curation, curation_full = data_curation_helpers.load_curation(parameters['curation_csv'])
+            curation = data_curation_helpers.load_curation(parameters['curation_csv'])
             logger.info(f"Data curation csv loading:{parameters['curation_csv']}")
             commit_hash = os.environ.get("AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT", "unknown")
             logger.info(f"aind-bwnm-fiber-data-curation-utils commit: {commit_hash}")
@@ -142,15 +142,15 @@ def run_analysis(
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
-    if parameters["save_dfs"] == True:
-        r_utils.save_nwb_list(nwbs_all, '/results/data/', curation_full, df_sess)
+    if parameters["save_dfs"]:
+        r_utils.save_nwb_list(nwbs_all, '/results/data/', curation, df_sess)
     else:
-        if curation_full is not None:
+        if curation is not None:
             suffix = "_".join(sorted(str(s) for s in df_sess['subject_id'].unique()))
             curation_path = Path("/results/data") / f"df_curation_{suffix}.csv"
             curation_path.parent.mkdir(parents=True, exist_ok=True)
             logger.info(f"saving curation to {curation_path}")
-            curation_full.to_csv(curation_path, index=False)
+            curation.to_csv(curation_path, index=False)
 
 
     ############## RUN ANALYSIS ##############
