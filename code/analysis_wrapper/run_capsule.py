@@ -85,7 +85,7 @@ def run_analysis(
             logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
                              "Continuing without curation.")
 
-    (df_sess, df_trials, df_events, df_fip) = r_utils.get_nwb_processed(
+    (df_sess, df_trials, df_events, df_fip, curation) = r_utils.get_nwb_processed(
         analysis_dispatch_inputs.file_location, curation=curation, **parameters)
 
 
