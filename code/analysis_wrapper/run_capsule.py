@@ -78,9 +78,9 @@ def run_analysis(
     if parameters['curation_csv'] is not None:
         try:
             curation = data_curation_helpers.load_curation(parameters['curation_csv'])
-            logger.info(f"Data curation csv loading:{parameters['curation_csv']}")
+            print(f"Data curation csv loading:{parameters['curation_csv']}")
             commit_hash = os.environ.get("AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT", "unknown")
-            logger.info(f"aind-bwnm-fiber-data-curation-utils commit: {commit_hash}")
+            print(f"aind-bwnm-fiber-data-curation-utils commit: {commit_hash}")
         except Exception:
             logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
                              "Continuing without curation.")
