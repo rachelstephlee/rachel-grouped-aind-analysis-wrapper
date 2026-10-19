@@ -23,6 +23,7 @@ from rachel_analysis_utils import nwb_utils as r_utils
 from rachel_analysis_utils import analysis_utils
 from rachel_analysis_utils import data_curation_helpers
 from analysis_wrapper.plots import summary_plots
+from analysis_pipeline_utils.metadata import get_metadata_for_records
 
 
 
@@ -76,6 +77,11 @@ def run_analysis(
 
     curation = None
     if parameters['curation_csv'] is not None:
+        metadata = get_metadata_for_records(analysis_dispatch_inputs)
+        qc_by_session = {
+                m["name"].split("_processed")[0]: (m.get("quality_control") or {}).get("evaluations", [])
+                for m in metadata
+            }
         try:
             curation = data_curation_helpers.load_curation(parameters['curation_csv'])
             print(f"Data curation csv loading:{parameters['curation_csv']}")
