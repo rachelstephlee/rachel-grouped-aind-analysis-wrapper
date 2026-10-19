@@ -130,7 +130,7 @@ def run_analysis(
 
     if {"rpe", "choice_split_rpe", "rpe_no_plots", "weekly", "bayer&glimcher"} & set(parameters["plot_types"]):
 
-        offsets = [0.33,1]
+        offsets = [1,1.5]
         nwbs_by_week = r_utils.split_nwbs_by_week(nwbs_all)
         # TODO:
         # 1. [done] edit add_AUC_rpe_slope to A. save outside of analysis utils
