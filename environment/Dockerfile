@@ -44,7 +44,7 @@ RUN --mount=type=secret,id=git-access-token \
     analysis-pipeline-utils==0.2.7 \
     codeocean==0.15.0 \ 
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.38#egg=aind-dynamic-foraging-basic-analysis \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@edgecase_co_utils#egg=aind-dynamic-foraging-data-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@4305c0eac40da9d086c1763d1edc35a6fee3f902#egg=aind-dynamic-foraging-data-utils \
     -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@322ae6aeb97ae4b2c6cb9b3e573019ef1e1337e4#egg=rachel-analysis-utils \
     -e git+https://github.com/AllenNeuralDynamics/aind-bwnm-fiber-data-curation-utils@${AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT}#egg=aind-bwnm-fiber-data-curation-utils
 
