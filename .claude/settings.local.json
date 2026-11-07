@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /src && grep -rln \"curation_csv\\\\|results_permissive\\\\|curation_results\" --include=*.py --include=*.ipynb . /root/capsule 2>/dev/null | head; grep -rn \"curation_csv\" --include=*.py /src /root/capsule 2>/dev/null | head -30)",
+      "Read(//src/**)",
+      "Bash(python -W ignore -)",
+      "Bash(timeout 300 python -W ignore /tmp/claude-0/-root-capsule/3a22abf8-2adf-49d2-9315-9911a60a1b6c/scratchpad/run_curation_test.py)",
+      "Bash(cd /root/capsule/code/analysis_wrapper && sed -n '/^if __name__/,$p' run_capsule.py; grep -n \"dry_run\\\\|plot_loc =\\\\|/results\" run_capsule.py | head)",
+      "Read(//results/plots/**)",
+      "Bash(python -W ignore /tmp/claude-0/-root-capsule/3a22abf8-2adf-49d2-9315-9911a60a1b6c/scratchpad/run_full_test.py)",
+      "Bash(grep -v \"SettingWithCopy\\\\|caveats\\\\|Try using\\\\|A value is trying\\\\|^\\\\s*df_ses.loc\\\\|^$\\\\|pandas-docs\" run_full_test.log)"
+    ]
+  }
+}
