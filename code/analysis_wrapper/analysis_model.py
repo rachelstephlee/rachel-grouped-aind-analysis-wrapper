@@ -5,7 +5,7 @@ This is an example of an analysis-specific schema for the parameters required by
 from typing import List, Optional, Union
  
 from aind_data_schema.base import GenericModel
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
  
  
@@ -28,8 +28,20 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
                     extension, e.g. \
                     'bilateral_4_channels/curation_results/bilateral_4_channels_results'. \
                     Sets each channel's intended measurement per session and drops fibers that \
-                    failed curation. None means no curation.")
- 
+                    failed curation. None means no fiber curation (QC can still run, \
+                    see qc_curation).")
+    qc_curation: bool | None = Field(default=None, description="Run QC curation (DocDB QC \
+                    metrics, high ignore rate). Defaults to True when curation_csv is set, \
+                    False otherwise. Set explicitly to override, e.g. a CSV without QC. \
+                    With no curation_csv, every fiber in `channels` starts as kept.")
+
+    @model_validator(mode="after")
+    def _default_qc_curation(self):
+        # None means unset: QC follows curation_csv unless the user chose explicitly
+        if self.qc_curation is None:
+            self.qc_curation = self.curation_csv is not None
+        return self
+
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
     save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis")
     plot_save_format: str=Field(default="png", description="Format to save plots in, e.g. png, pdf, etc.")

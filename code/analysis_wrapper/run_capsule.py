@@ -21,9 +21,10 @@ from analysis_wrapper.analysis_model import (
 
 from rachel_analysis_utils import nwb_utils as r_utils
 from rachel_analysis_utils import analysis_utils
-from rachel_analysis_utils import data_curation_helpers
+from rachel_analysis_utils import data_curation_helpers, qc_curation_helpers
 from analysis_wrapper.plots import summary_plots
 from analysis_pipeline_utils.metadata import get_metadata_for_records
+
 
 
 
@@ -64,6 +65,64 @@ def get_all_channels(parameters, ch_suffix, df_fip=None):
     return all_channels, channel_locs
 
 
+def get_curation(analysis_dispatch_inputs, parameters):
+    """
+    Build the curation table for this run.
+
+    Returns (curation, df_qc). df_qc is the run's DocDB QC, one row per (session,
+    metric) from qc_curation_helpers.get_qc_to_csv; None when QC does not run.
+
+    curation_csv  qc_curation   curation                                          df_qc
+    set           True          CSV + QC                                          table
+    set           False         CSV only                                          None
+    None          True          default all-pass table (from parameters['channels']) + QC   table
+    None          False         None                                              None
+    """
+    use_csv = parameters["curation_csv"] is not None
+    use_qc = parameters["qc_curation"]
+    if not (use_csv or use_qc):
+        return None, None
+
+    curation = None
+    if use_csv:
+        try:
+            curation = data_curation_helpers.load_curation(parameters["curation_csv"])
+            print(f"Data curation csv loading:{parameters['curation_csv']}")
+            commit_hash = os.environ.get("AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT", "unknown")
+            print(f"aind-bwnm-fiber-data-curation-utils commit: {commit_hash}")
+        except Exception:
+            logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
+                             f"Continuing without the CSV{' (QC only)' if use_qc else ''}.")
+            if not use_qc:
+                return None, None
+
+    if curation is not None:
+        # keep only this run's sessions; the full CSV stays versioned in curation-utils.
+        # A loaded fiber with no row still raises later, in apply_curation_df_fip
+        curation = curation[curation["session_id"].isin(analysis_dispatch_inputs.asset_name)].reset_index(drop=True)
+
+
+    df_qc = None
+    if use_qc:
+        # this uses the docDB_records_id. if you change assets, you will need to update
+        # those (find using the data asset viewer)
+        metadata = get_metadata_for_records(analysis_dispatch_inputs)
+        qc_by_session = {
+            m["name"].split("_processed")[0]: (m.get("quality_control") or {}).get("evaluations", [])
+            for m in metadata
+        }
+        # 1. qc_by_session -> long dataframe (one row per metric)
+        df_qc = qc_curation_helpers.get_qc_to_csv(qc_by_session)
+
+        # 2. -> exploded table for one metric (one row per session, one col per fiber)
+        square_pulse_pval = qc_curation_helpers.expand_qc_metric(df_qc, "Significant response Delay before Go Cue")
+        if curation is None:
+            curation = data_curation_helpers.make_default_curation(list(qc_by_session), parameters["channels"])
+        curation = data_curation_helpers.add_square_pulse_pvalue(curation, square_pulse_pval)
+
+    return curation, df_qc
+
+
 ### USER EDITABLE FUNCTION WHERE ANALYSIS IS EXECUTED
 def run_analysis(
     analysis_dispatch_inputs: AnalysisDispatchModel,
@@ -75,24 +134,23 @@ def run_analysis(
     # return a dict of output parameters.
     parameters = analysis_parameters.model_dump()
 
-    curation = None
-    if parameters['curation_csv'] is not None:
-        metadata = get_metadata_for_records(analysis_dispatch_inputs)
-        qc_by_session = {
-                m["name"].split("_processed")[0]: (m.get("quality_control") or {}).get("evaluations", [])
-                for m in metadata
-            }
-        try:
-            curation = data_curation_helpers.load_curation(parameters['curation_csv'])
-            print(f"Data curation csv loading:{parameters['curation_csv']}")
-            commit_hash = os.environ.get("AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT", "unknown")
-            print(f"aind-bwnm-fiber-data-curation-utils commit: {commit_hash}")
-        except Exception:
-            logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
-                             "Continuing without curation.")
+    curation, df_qc = get_curation(analysis_dispatch_inputs, parameters)
+
+    # empty curation check 1: the curation CSV + QC keep no requested fiber in any session
+    if curation is not None and not (curation["keep"] & curation["fiber"].isin(parameters["channels"])).any():
+        print("Curation drops every requested fiber in every session; saving curation, skipping analysis.")
+        r_utils.save_nwb_list([], '/results/data/', curation, None, df_qc=df_qc)
+        return {}
 
     (df_sess, df_trials, df_events, df_fip, curation) = r_utils.get_nwb_processed(
         analysis_dispatch_inputs.file_location, curation=curation, **parameters)
+
+    # empty curation check 2: drop_high_ignore_sessions left no session to load
+    # (get_nwb_processed returns early, before loading any NWB)
+    if df_sess.empty:
+        print("No sessions left after curation; saving curation, skipping analysis.")
+        r_utils.save_nwb_list([], '/results/data/', curation, None, df_qc=df_qc)
+        return {}
 
 
 
@@ -148,15 +206,13 @@ def run_analysis(
     if not os.path.exists(plot_loc):
         os.makedirs(plot_loc)
 
+    suffix = "_".join(sorted(str(s) for s in df_sess['subject_id'].unique()))
+    data_loc = Path("/results/data")
+    data_loc.mkdir(parents=True, exist_ok=True)
     if parameters["save_dfs"]:
-        r_utils.save_nwb_list(nwbs_all, '/results/data/', curation, df_sess)
+        r_utils.save_nwb_list(nwbs_all, '/results/data/', curation, df_sess, df_qc=df_qc)
     else:
-        if curation is not None:
-            suffix = "_".join(sorted(str(s) for s in df_sess['subject_id'].unique()))
-            curation_path = Path("/results/data") / f"df_curation_{suffix}.csv"
-            curation_path.parent.mkdir(parents=True, exist_ok=True)
-            logger.info(f"saving curation to {curation_path}")
-            curation.to_csv(curation_path, index=False)
+        r_utils.save_nwb_list([], '/results/data/', curation, None, df_qc=df_qc)
 
 
     ############## RUN ANALYSIS ##############

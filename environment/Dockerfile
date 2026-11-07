@@ -12,8 +12,8 @@ ENV DOCDB_COLLECTION=dynamic-foraging-nm
 ENV CODEOCEAN_DOMAIN=codeocean.allenneuraldynamics.org
 ENV CODEOCEAN_EMAIL=rachel.lee@alleninstitute.org
 ENV ANALYSIS_BUCKET=aind-analysis-prod-o5171v/dynamic-foraging-nm
-ENV AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT=b5127cfb8fbcfcb60fc3add55217b47ef99ffe8f
-
+ENV AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT=8910a6d4387bf97e4e42ff77bacc27d8574c6794
+ENV RACHEL_UTILS_COMMIT=519fcdd65d80e1fcc4b29de2e6e3ebeb0b5c69fe
 
 RUN --mount=type=secret,id=git-access-token \
     GIT_ACCESS_TOKEN="$(cat /run/secrets/git-access-token)" \
@@ -44,8 +44,8 @@ RUN --mount=type=secret,id=git-access-token \
     analysis-pipeline-utils==0.2.7 \
     codeocean==0.15.0 \ 
     -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-basic-analysis.git@v0.3.38#egg=aind-dynamic-foraging-basic-analysis \
-    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@4305c0eac40da9d086c1763d1edc35a6fee3f902#egg=aind-dynamic-foraging-data-utils \
-    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@abb012d08cf4a9f61790c154a1857a4412776cbd#egg=rachel-analysis-utils \
+    -e git+https://github.com/AllenNeuralDynamics/aind-dynamic-foraging-data-utils.git@v0.1.57#egg=aind-dynamic-foraging-data-utils \
+    -e git+https://github.com/AllenNeuralDynamics/rachel-analysis-utils@{RACHEL_UTILS_COMMIT}n#egg=rachel-analysis-utils \
     -e git+https://github.com/AllenNeuralDynamics/aind-bwnm-fiber-data-curation-utils@${AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT}#egg=aind-bwnm-fiber-data-curation-utils
 
 COPY postInstall /
