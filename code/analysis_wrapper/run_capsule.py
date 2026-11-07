@@ -97,10 +97,9 @@ def get_curation(analysis_dispatch_inputs, parameters):
                 return None, None
 
     if curation is not None:
-        # keep only this run's sessions; the full CSV stays versioned in curation-utils.
-        # A loaded fiber with no row still raises later, in apply_curation_df_fip
-        curation = curation[curation["session_id"].isin(analysis_dispatch_inputs.asset_name)].reset_index(drop=True)
-
+        names = list(analysis_dispatch_inputs.asset_name)
+        in_run = curation["session_id"].apply(lambda sid: any(sid in n for n in names))
+        curation = curation[in_run].reset_index(drop=True)
 
     df_qc = None
     if use_qc:
