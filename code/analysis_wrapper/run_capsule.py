@@ -24,7 +24,7 @@ from rachel_analysis_utils import analysis_utils
 from rachel_analysis_utils import data_curation_helpers, qc_curation_helpers
 from analysis_wrapper.plots import summary_plots
 from analysis_pipeline_utils.metadata import get_metadata_for_records
-
+import pandas as pd
 
 
 
@@ -86,10 +86,13 @@ def get_curation(analysis_dispatch_inputs, parameters):
     curation = None
     if use_csv:
         try:
-            curation = data_curation_helpers.load_curation(parameters["curation_csv"])
-            print(f"Data curation csv loading:{parameters['curation_csv']}")
             commit_hash = os.environ.get("AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT", "unknown")
             print(f"aind-bwnm-fiber-data-curation-utils commit: {commit_hash}")
+            curation = pd.concat(
+                [data_curation_helpers.load_curation(p) for p in parameters["curation_csv"]],
+                ignore_index=True,
+            )
+            print(f"Data curation csv loading: {parameters['curation_csv']}")
         except Exception:
             logger.exception(f"Failed to load curation at {parameters['curation_csv']}. "
                              f"Continuing without the CSV{' (QC only)' if use_qc else ''}.")

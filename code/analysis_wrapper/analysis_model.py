@@ -5,7 +5,7 @@ This is an example of an analysis-specific schema for the parameters required by
 from typing import List, Optional, Union
  
 from aind_data_schema.base import GenericModel
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
  
  
@@ -23,13 +23,21 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
                     When curation_csv is set the values are ignored in favor of the CSV's targets, \
                     and every key must be covered by the CSV or the run errors.")
     preprocessing: str=Field(description="preprocessing_method", default = "dff-bright_mc-iso-IRLS")
-    curation_csv: str | None=Field(default=None, description="Fiber curation results file, relative to the \
-                    data folder of aind_bwnm_fiber_data_curation_utils and without the .csv \
-                    extension, e.g. \
-                    'bilateral_4_channels/curation_results/bilateral_4_channels_results'. \
-                    Sets each channel's intended measurement per session and drops fibers that \
-                    failed curation. None means no fiber curation (QC can still run, \
-                    see qc_curation).")
+    curation_csv: list[str] | None=Field(default=None, description="List of fiber curation results files, \
+                    each relative to the data folder of aind_bwnm_fiber_data_curation_utils and \
+                    without the .csv extension, e.g. \
+                    ['bilateral_3_channels/curation_results/bilateral_3_channels_results_permissive', \
+                    'bilateral_4_channels/curation_results/bilateral_4_channels_results_permissive']. \
+                    The files are appended into one curation table, so they must not share a \
+                    (session_id, fiber). Sets each channel's intended measurement per session and \
+                    drops fibers that failed curation. A single string is accepted as a one-item \
+                    list. None means no fiber curation (QC can still run, see qc_curation).")
+
+    @field_validator("curation_csv", mode="before")
+    @classmethod
+    def _curation_csv_to_list(cls, v):
+        # keep older single-string configs working
+        return [v] if isinstance(v, str) else v
     qc_curation: bool | None = Field(default=None, description="Run QC curation (DocDB QC \
                     metrics, high ignore rate). Defaults to True when curation_csv is set, \
                     False otherwise. Set explicitly to override, e.g. a CSV without QC. \
