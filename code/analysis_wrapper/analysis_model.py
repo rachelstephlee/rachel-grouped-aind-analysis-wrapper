@@ -15,7 +15,7 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
     version, libraries to track, and parameters.
     """
     name: str=Field(description="name of analysis")
-    plot_types: list[str]=Field(description="types of plots to generate", default = ["all_sess"])
+    plot_types: list[str]=Field(description="types of plots to generate, includes all_sess, subsample (modifier for all_sess/rpe), rpe, choice_split_rpe, sess_split_extra, all_sess_extra, bayer&glimcher, weekly, behavior, avg_lastN_sess", default = ["all_sess"])
     last_N_sess: int=Field(description="number of last sessions to plot", default = 5)
     channels: dict[str, str] = Field(..., description="Dictionary of channels to plot from. \
                     Keys = patch cord to load, Value = intended location and measurement. \
@@ -43,7 +43,7 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
         return self
 
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
-    save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis")
+    save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis. if not plots used, rpe_no_plots is needed in plot_types")
     plot_save_format: str=Field(default="png", description="Format to save plots in, e.g. png, pdf, etc.")
  
 # removing pearson pairs for now

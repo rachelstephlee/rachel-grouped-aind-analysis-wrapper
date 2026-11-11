@@ -112,7 +112,7 @@ def plot_bayer_glimcher_rows(nwb_list, channel, channel_loc,loc = None, max_lag=
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
     if loc is not None:
-        plt.savefig(f"{loc}{subject_id}_{channel}_{channel_loc}_b&g.png", bbox_inches='tight', transparent=False, dpi = 200)
+        plt.savefig(f"{loc}{subject_id}_{channel}_{channel_loc}_b&g.{SAVE_FORMAT}", bbox_inches='tight', transparent=TRANSPARENT_PLOT, dpi = 200)
         plt.close(fig)
 
     all_coef_df = pd.concat(coef_dfs, ignore_index=True) if coef_dfs else pd.DataFrame()
