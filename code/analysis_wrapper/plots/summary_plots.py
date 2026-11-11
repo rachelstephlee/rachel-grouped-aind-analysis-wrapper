@@ -60,7 +60,9 @@ def plot_bayer_glimcher(nwb, channel, ax, max_lag=6):
     results = analysis_utils.regression_choice_time_vs_reward(df_trials, reward_col='earned_reward', max_lag=max_lag, y_col=y_col)
 
     coef_df = results['coef'].reset_index().rename(columns={'index': 'lag'})
-    coef_df['lag_num'] = coef_df['lag'].str.extract(r'lag(\d+)').astype(int)
+    # drop the intercept ('const') row; only lag terms are plotted
+    coef_df = coef_df[coef_df['lag'].str.contains(r'lag\d+', regex=True)].copy()
+    coef_df['lag_num'] = coef_df['lag'].str.extract(r'lag(\d+)', expand=False).astype(int)
     coef_df['session_id'] = nwb.session_id
 
     # plot coefficients with error bars
@@ -102,7 +104,8 @@ def plot_bayer_glimcher_rows(nwb_list, channel, channel_loc,loc = None, max_lag=
         except Exception as exc:
             ax.clear()
             ax.text(0.5, 0.5, f"Error:\n{exc}", ha="center", va="center", wrap=True)
-            ax.set_title(f"session {i} (error)")
+            label = getattr(nwb, "session_id", None) or f"session {i}"
+            ax.set_title(f"{label} (error)", fontsize=10)
 
     fig.suptitle(f"{subject_id}_{channel}_{channel_loc} — Bayer & Glimcher regressions")
 
