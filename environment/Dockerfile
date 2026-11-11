@@ -13,7 +13,7 @@ ENV CODEOCEAN_DOMAIN=codeocean.allenneuraldynamics.org
 ENV CODEOCEAN_EMAIL=rachel.lee@alleninstitute.org
 ENV ANALYSIS_BUCKET=aind-analysis-prod-o5171v/dynamic-foraging-nm
 ENV AIND_BWNM_FIBER_DATA_CURATION_UTILS_COMMIT=8910a6d4387bf97e4e42ff77bacc27d8574c6794
-ENV RACHEL_UTILS_COMMIT=10287c616d8117f1e9280fe543cd84860eec4acb
+ENV RACHEL_UTILS_COMMIT=987c4c825d8853495f264fa4b11360efcb98fc51
 
 RUN --mount=type=secret,id=git-access-token \
     GIT_ACCESS_TOKEN="$(cat /run/secrets/git-access-token)" \
