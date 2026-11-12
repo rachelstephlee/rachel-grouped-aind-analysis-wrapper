@@ -1187,7 +1187,11 @@ def plot_per_sess_behavior_data(nwb, fig, panels):
     # Top: foraging session plot
     big_ax_top = fig.add_subplot(panels[1,:])
 
-    [_, foraging_session_axes] = pb.plot_foraging_session_nwb(nwb, ax=big_ax_top)
+    # plot_foraging_session_nwb no longer returns its axes, so recover them from the
+    # figure: the two axes it adds (choice/reward, then reward schedule) are the new ones.
+    axes_before = set(fig.axes)
+    pb.plot_foraging_session_nwb(nwb, ax=big_ax_top)
+    foraging_session_axes = [a for a in fig.axes if a not in axes_before]
     foraging_session_axes[1].set_xlabel("")
 
 
@@ -1270,7 +1274,7 @@ def plot_per_sess_behavior_data(nwb, fig, panels):
 
     # Map choice to labels
     choice_labels = {0: 'left', 1: 'right', 2: 'ignore'}
-    df_trials_rew['choice_label'] = df_trials_rew['choice'].map(choice_labels)
+    df_trials_rew['choice_label'] = df_trials_rew['animal_response'].map(choice_labels)
     # Create temporary df with rewarded_prev trials duplicated to plot both together
 
     choice_bars = sns.countplot(

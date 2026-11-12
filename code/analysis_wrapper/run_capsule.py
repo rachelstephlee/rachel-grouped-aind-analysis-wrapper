@@ -271,8 +271,10 @@ def run_analysis(
         logger.info("running ALL SESS behavior")
         if len(nwbs_all) > 5:
             nwb_batches = [nwbs_all[i:i+5] for i in range(0, len(nwbs_all), 5)]
-            for nwb_batch in nwb_batches:
-                summary_plots.plot_all_sess_behavior(df_sess, nwb_batch, loc = plot_loc)
+        else:
+            nwb_batches = [nwbs_all]
+        for nwb_batch in nwb_batches:
+            summary_plots.plot_all_sess_behavior(df_sess, nwb_batch, loc = plot_loc)
     if "avg_lastN_sess" in parameters["plot_types"]:
         logger.info("running average last N sessions")
         summary_plots.plot_avg_final_N_sess(df_sess, nwbs_all, all_channels, channel_locs, final_N_sess = parameters["last_N_sess"], loc = plot_loc)
