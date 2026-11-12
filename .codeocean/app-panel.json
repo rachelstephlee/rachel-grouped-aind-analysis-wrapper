@@ -20,6 +20,15 @@
 			"type": "text",
 			"value_type": "string",
 			"default_value": "QLearning_L1F1_CK1_softmax"
+		},
+		{
+			"id": "jsX0wNqX5dPL6Xp5",
+			"name": "type of plots",
+			"param_name": "plot_types",
+			"description": "types of plots ",
+			"help_text": "types of plots to generate, includes all_sess, subsample (modifier for all_sess/rpe), rpe, choice_split_rpe, sess_split_extra, all_sess_extra, bayer\u0026glimcher, weekly, behavior, avg_lastN_sess\"",
+			"type": "text",
+			"value_type": "string"
 		}
 	]
 }
