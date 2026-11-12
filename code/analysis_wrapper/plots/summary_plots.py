@@ -48,13 +48,26 @@ def set_save_format(fmt: str):
         global TRANSPARENT_PLOT
         TRANSPARENT_PLOT = True
 
+def wrap_label(label, width=25):
+    """Wrap a long underscore-separated column name onto multiple lines (break after underscores)."""
+    lines, cur = [], ""
+    for part in label.split("_"):
+        piece = part if not cur else f"{cur}_{part}"
+        if cur and len(piece) > width:
+            lines.append(cur + "_")
+            cur = part
+        else:
+            cur = piece
+    lines.append(cur)
+    return "\n".join(lines)
+
 def plot_bayer_glimcher(nwb, channel, ax, max_lag=6):
     # get trial-level data
     df_trials = nwb.df_trials
     channel_short = channel.split('_dff')[0] if '_dff' in channel else channel
-    y_cols = [c for c in df_trials.columns if c.startswith("avg_data") and c.endswith(f"{channel_short}_choice_time")]
+    y_cols = [c for c in df_trials.columns if c.startswith("avg_data") and channel_short in c]
     if len(y_cols) != 1:
-        raise ValueError(f"Expected 1 avg_data*{channel}_choice_time column, found {y_cols}")
+        raise ValueError(f"Expected 1 avg_data*{channel_short} column, found {y_cols}")
     y_col = y_cols[0]
     # run regression
     results = analysis_utils.regression_choice_time_vs_reward(df_trials, reward_col='earned_reward', max_lag=max_lag, y_col=y_col)
@@ -73,9 +86,8 @@ def plot_bayer_glimcher(nwb, channel, ax, max_lag=6):
     ax.axhline(0, color='gray', linestyle='--')
     ax.set_xlabel('Reward Lag (0=current trial)')
     ax.set_ylabel('Regression Coefficient on Choice Time')
-    ax.set_title('Bayer & Glimcher Style Regression of Choice Time on Past Rewards')
     ax.set_xticks(coef_df['lag_num'].unique())
-    return ax, coef_df
+    return ax, coef_df, y_col
 def plot_bayer_glimcher_rows(nwb_list, channel, channel_loc,loc = None, max_lag=6):
     """
     Plot Bayer & Glimcher regression for each nwb in nwb_list as a separate ROW.
@@ -97,7 +109,7 @@ def plot_bayer_glimcher_rows(nwb_list, channel, channel_loc,loc = None, max_lag=
     for i, nwb in enumerate(nwb_list):
         ax = axes[i]
         try:
-            ax, coef_df = plot_bayer_glimcher(nwb, channel, ax, max_lag=max_lag)
+            ax, coef_df, avg_data_col_name = plot_bayer_glimcher(nwb, channel, ax, max_lag=max_lag)
             coef_dfs.append(coef_df)
             label = getattr(nwb, "session_id", None) or getattr(nwb, "subject_id", None) or str(nwb)
             ax.set_title(label, fontsize=10)
@@ -107,7 +119,7 @@ def plot_bayer_glimcher_rows(nwb_list, channel, channel_loc,loc = None, max_lag=
             label = getattr(nwb, "session_id", None) or f"session {i}"
             ax.set_title(f"{label} (error)", fontsize=10)
 
-    fig.suptitle(f"{subject_id}_{channel}_{channel_loc} — Bayer & Glimcher regressions")
+    fig.suptitle(f"{subject_id}_{channel}_{channel_loc} — Bayer & Glimcher regression\n {avg_data_col_name}")
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
@@ -166,7 +178,7 @@ def plot_RPE_by_avg_signal(df_trials, avg_signal_col, ax):
         (x_fit, y_fit, slope) = analysis_utils.get_RPE_by_avg_signal_fit(df_trials_pos, avg_signal_col)
         ax.plot(x_fit, y_fit, color='red', lw=2, label=f'RPE >= 0: {slope:.3f}')
     ax.set_xlabel('RPE_earned')
-    ax.set_ylabel(avg_signal_col)
+    ax.set_ylabel(wrap_label(avg_signal_col))
     ax.legend(framealpha=0.5, title = "LM fitted slopes", fontsize='small')
 
     return ax

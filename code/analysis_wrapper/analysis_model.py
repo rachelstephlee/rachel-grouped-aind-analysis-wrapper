@@ -52,6 +52,7 @@ class SummaryPlotsAnalysisSpecification(GenericModel):
 
     fitted_model: str=Field(default = "QLearning_L2F1_CKfull_softmax", description="Qlearning model fitted to get RPE")
     save_dfs: bool=Field(default=False, description="Save the dataframes for the analysis. if not plots used, rpe_no_plots is needed in plot_types")
+    auc_offsets: list[float]=Field(default=[0.33, 1], min_length=2, max_length=2, description="[start, end] window (in seconds) relative to choice time, used to average the signal for the RPE vs avg-signal slopes/plots")
     plot_save_format: str=Field(default="png", description="Format to save plots in, e.g. png, pdf, etc.")
  
 # removing pearson pairs for now
