@@ -12,16 +12,6 @@
 			"value_type": "string"
 		},
 		{
-			"id": "lgr4slUI1SYuR4mv",
-			"name": "fitted model for RPE",
-			"param_name": "fitted_model",
-			"description": "Fitted model for RPE. ",
-			"help_text": "Fitted model for RPE. See this link for all: \n\nhttps://foraging-behavior-browser.allenneuraldynamics-test.org/RL_model_playground",
-			"type": "text",
-			"value_type": "string",
-			"default_value": "QLearning_L1F1_CK1_softmax"
-		},
-		{
 			"id": "jsX0wNqX5dPL6Xp5",
 			"name": "type of plots",
 			"param_name": "plot_types",
