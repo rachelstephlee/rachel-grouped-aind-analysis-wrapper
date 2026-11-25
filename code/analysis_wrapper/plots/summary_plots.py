@@ -1252,6 +1252,9 @@ def plot_per_sess_behavior_data(nwb, fig, panels):
     ax2 = fig.add_subplot(panels[-1,3])
     df_trials_prev_rew = pd.concat([nwb.df_trials, nwb.df_trials.query('rewarded_prev == True')],
                              keys = ['all trials', 'prev rew']).reset_index(level=[0])
+    # stay is NA on each session's first trial, so stay_label is NaN there; leave those
+    # out so the percentages are of trials that have a stay/leave
+    df_trials_prev_rew = df_trials_prev_rew.dropna(subset=['stay_label'])
     ax2.set_title("% Stay/Leave")
     # Plot overall % Stay/Leave
     stay_bars = sns.countplot(
